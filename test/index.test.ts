@@ -1,6 +1,6 @@
 import { providers, ContractFactory, constants, ContractTransaction } from 'ethers'
 import { hash as namehash } from '@ensdomains/eth-ens-namehash'
-import { keccak_256 } from 'js-sha3'
+import { keccak_256 as sha3 } from 'js-sha3'
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 
 import { RNS } from '../src'
@@ -20,8 +20,8 @@ describe('RNS SDK', () => {
 
     // delegate taringa.rsk to test account
     const address = await signer.getAddress()
-    await rnsRegistryContract.setSubnodeOwner(constants.HashZero, '0x' + keccak_256('rsk'), address).then((tx: ContractTransaction) => tx.wait())
-    await rnsRegistryContract.setSubnodeOwner(namehash('rsk'), '0x' + keccak_256('taringa'), address).then((tx: ContractTransaction) => tx.wait())
+    await rnsRegistryContract.setSubnodeOwner(constants.HashZero, '0x' + sha3('rsk'), address).then((tx: ContractTransaction) => tx.wait())
+    await rnsRegistryContract.setSubnodeOwner(namehash('rsk'), '0x' + sha3('taringa'), address).then((tx: ContractTransaction) => tx.wait())
 
     const rns = new RNS(rnsRegistryContract.address, signer)
 
