@@ -66,7 +66,7 @@ describe('RNS SDK', () => {
     const unsetResolverAddress = await rns.addr('taringa.rsk')
     expect(unsetResolverAddress).toEqual(constants.AddressZero)
 
-    const setAddressTx = await rns.setAddr('taringa.rsk', await addrResolverContract.addr(namehash('taringa.rsk')))
+    const setAddressTx = await rns.setAddr('taringa.rsk', address)
     setAddressTx.wait()
 
     const addressResolved = await rns.addr('taringa.rsk')
