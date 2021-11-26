@@ -30,14 +30,14 @@ const deployRNS = async () => {
 
 describe('RNS SDK', () => {
   test('set subnode owner for user1.taringa.rsk', async () => {
-    const { signer, rnsRegistryContract } = await deployRNS()
+    const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
 
     // delegate taringa.rsk to test account
     const address = await signer.getAddress()
     await rnsRegistryContract.setSubnodeOwner(constants.HashZero, '0x' + sha3('rsk'), address).then((tx: ContractTransaction) => tx.wait())
     await rnsRegistryContract.setSubnodeOwner(namehash('rsk'), '0x' + sha3('taringa'), address).then((tx: ContractTransaction) => tx.wait())
 
-    const rns = new RNS(rnsRegistryContract.address, signer)
+    const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
 
     const domain = 'taringa.rsk'
     const label = 'user1'
@@ -49,25 +49,27 @@ describe('RNS SDK', () => {
   })
 
   test('set addr for user1.taringa.rsk', async () => {
-    const { signer, rnsRegistryContract } = await deployRNS()
+    const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
 
     // delegate taringa.rsk to test account
     const address = await signer.getAddress()
     await rnsRegistryContract.setSubnodeOwner(constants.HashZero, '0x' + sha3('rsk'), address).then((tx: ContractTransaction) => tx.wait())
     await rnsRegistryContract.setSubnodeOwner(namehash('rsk'), '0x' + sha3('taringa'), address).then((tx: ContractTransaction) => tx.wait())
     await rnsRegistryContract.setSubnodeOwner(namehash('taringa.rsk'), '0x' + sha3('user1'), address).then((tx: ContractTransaction) => tx.wait())
-
-    console.log(await rnsRegistryContract.resolver(namehash('user1.taringa.rsk')))
-    /*
-    const rns = new RNS(rnsRegistryContract.address, signer)
-
+    const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
     const domain = 'taringa.rsk'
     const label = 'user1'
 
     const tx = await rns.setSubnodeOwner(domain, label, testAddress)
     await tx.wait()
 
-    expect(await rnsRegistryContract.owner(namehash(`${label}.${domain}`))).toEqual(testAddress)
-    */
+    const unsetResolverAddress = await rns.addr('taringa.rsk')
+    expect(unsetResolverAddress).toEqual(constants.AddressZero)
+
+    const setAddressTx = await rns.setAddr('taringa.rsk', address)
+    setAddressTx.wait()
+
+    const addressResolved = await rns.addr('taringa.rsk')
+    expect(addressResolved).toEqual(address)
   })
 })
