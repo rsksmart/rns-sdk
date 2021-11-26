@@ -1,4 +1,4 @@
-import { providers, ContractFactory, constants, ContractTransaction } from 'ethers'
+import { providers, ContractFactory, constants, ContractTransaction, Contract } from 'ethers'
 import { hash as namehash } from '@ensdomains/eth-ens-namehash'
 import { keccak_256 as sha3 } from 'js-sha3'
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
@@ -27,6 +27,10 @@ const deployRNS = async () => {
 
   return { signer, rnsRegistryContract, addrResolverContract }
 }
+const registerDomain = async (rnsRegistryContract: Contract, address: string) => {
+  await rnsRegistryContract.setSubnodeOwner(constants.HashZero, '0x' + sha3('rsk'), address).then((tx: ContractTransaction) => tx.wait())
+  await rnsRegistryContract.setSubnodeOwner(namehash('rsk'), '0x' + sha3('taringa'), address).then((tx: ContractTransaction) => tx.wait())
+}
 
 describe('RNS SDK', () => {
   test('set subnode owner for user1.taringa.rsk', async () => {
@@ -34,8 +38,7 @@ describe('RNS SDK', () => {
 
     // delegate taringa.rsk to test account
     const address = await signer.getAddress()
-    await rnsRegistryContract.setSubnodeOwner(constants.HashZero, '0x' + sha3('rsk'), address).then((tx: ContractTransaction) => tx.wait())
-    await rnsRegistryContract.setSubnodeOwner(namehash('rsk'), '0x' + sha3('taringa'), address).then((tx: ContractTransaction) => tx.wait())
+    await registerDomain(rnsRegistryContract, address)
 
     const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
 
@@ -48,37 +51,52 @@ describe('RNS SDK', () => {
     expect(await rnsRegistryContract.owner(namehash(`${label}.${domain}`))).toEqual(testAddress)
   })
 
-  test('set addr for user1.taringa.rsk', async () => {
+  test('set addr for taringa.rsk', async () => {
     const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
 
     // delegate taringa.rsk to test account
     const address = await signer.getAddress()
-    await rnsRegistryContract.setSubnodeOwner(constants.HashZero, '0x' + sha3('rsk'), address).then((tx: ContractTransaction) => tx.wait())
-    await rnsRegistryContract.setSubnodeOwner(namehash('rsk'), '0x' + sha3('taringa'), address).then((tx: ContractTransaction) => tx.wait())
-    await rnsRegistryContract.setSubnodeOwner(namehash('taringa.rsk'), '0x' + sha3('user1'), address).then((tx: ContractTransaction) => tx.wait())
+    await registerDomain(rnsRegistryContract, address)
     const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
-    const domain = 'taringa.rsk'
-    const label = 'user1'
-
-    const tx = await rns.setSubnodeOwner(domain, label, testAddress)
-    await tx.wait()
 
     const unsetResolverAddress = await rns.addr('taringa.rsk')
     expect(unsetResolverAddress).toEqual(constants.AddressZero)
 
     const setAddressTx = await rns.setAddr('taringa.rsk', address)
     setAddressTx.wait()
+    const addressResolved = await addrResolverContract.addr(namehash('taringa.rsk'))
+    expect(addressResolved).toEqual(address)
+  })
+
+  test('addr for taringa.rsk', async () => {
+    const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
+    // delegate taringa.rsk to test account
+    const address = await signer.getAddress()
+    await registerDomain(rnsRegistryContract, address)
+
+    const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
+
+    const setAddressTx = await addrResolverContract.setAddr(namehash('taringa.rsk'), address)
+    setAddressTx.wait()
 
     const addressResolved = await rns.addr('taringa.rsk')
-    expect(addressResolved).toEqual(await addrResolverContract.addr(namehash('taringa.rsk')))
+    expect(addressResolved).toEqual(address)
+  })
 
-    const tx2 = await rns.setSubnodeOwner(domain, label, address)
-    await tx2.wait()
+  test('set and get addr for user1.taringa.rsk', async () => {
+    const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
 
-    const setAddressToSubdomainTx = await rns.setAddr('user1.taringa.rsk', address)
-    setAddressToSubdomainTx.wait()
+    // delegate taringa.rsk to test account
+    const address = await signer.getAddress()
+    await registerDomain(rnsRegistryContract, address)
+    await rnsRegistryContract.setSubnodeOwner(namehash('taringa.rsk'), '0x' + sha3('user1'), address).then((tx: ContractTransaction) => tx.wait())
+    const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
 
-    const addressOfSubdomainResolved = await rns.addr('user1.taringa.rsk')
-    expect(addressOfSubdomainResolved).toEqual(await addrResolverContract.addr(namehash('user1.taringa.rsk')))
+    await rns.setAddr('user1.taringa.rsk', address)
+
+    const setAddressTx = await rns.setAddr('user1.taringa.rsk', address)
+    setAddressTx.wait()
+    const addressResolved = await addrResolverContract.addr(namehash('user1.taringa.rsk'))
+    expect(addressResolved).toEqual(address)
   })
 })
