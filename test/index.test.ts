@@ -71,5 +71,14 @@ describe('RNS SDK', () => {
 
     const addressResolved = await rns.addr('taringa.rsk')
     expect(addressResolved).toEqual(await addrResolverContract.addr(namehash('taringa.rsk')))
+
+    const tx2 = await rns.setSubnodeOwner(domain, label, address)
+    await tx2.wait()
+
+    const setAddressToSubdomainTx = await rns.setAddr('user1.taringa.rsk', address)
+    setAddressToSubdomainTx.wait()
+
+    const addressOfSubdomainResolved = await rns.addr('user1.taringa.rsk')
+    expect(addressOfSubdomainResolved).toEqual(await addrResolverContract.addr(namehash('user1.taringa.rsk')))
   })
 })
