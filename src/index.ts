@@ -6,11 +6,16 @@ import AddrResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
 
 export class RNS {
   rnsRegistry: Contract
-  rnsResolver: Contract
+  signer: Signer
 
   constructor (rnsRegistryAddress: string, rnsResolverAddress: string, signer: Signer) {
     this.rnsRegistry = new Contract(rnsRegistryAddress, RNSRegistryData.abi).connect(signer)
-    this.rnsResolver = new Contract(rnsResolverAddress, AddrResolverData.abi).connect(signer)
+    this.signer = signer
+  }
+
+  async getResolverContract (domain:string) {
+    const resolverAddress = await this.rnsRegistry.resolver(domain)
+    return new Contract(resolverAddress, AddrResolverData.abi).connect(this.signer)
   }
 
   setSubnodeOwner (domain: string, label: string, owner: string) {
@@ -20,11 +25,13 @@ export class RNS {
     return this.rnsRegistry.setSubnodeOwner(domainNamehash, labelHash, owner)
   }
 
-  setAddr (label: string, address: string) {
-    return this.rnsResolver.setAddr(namehash(label), address)
+  async setAddr (domain: string, address: string) {
+    const resolverContract = await this.getResolverContract(namehash(domain))
+    return resolverContract.setAddr(namehash(domain), address)
   }
 
-  addr (label: string) {
-    return this.rnsResolver.addr(namehash(label))
+  async addr (label: string) {
+    const resolverContract = await this.getResolverContract(namehash(label))
+    return resolverContract.addr(namehash(label))
   }
 }
