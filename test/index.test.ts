@@ -1,102 +1,42 @@
-import { providers, ContractFactory, constants, ContractTransaction, Contract } from 'ethers'
-import { hash as namehash } from '@ensdomains/eth-ens-namehash'
-import { keccak_256 as sha3 } from 'js-sha3'
-import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
-import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
+import { RNS, hashDomain } from '../src'
+import { deployRNSFactory, sendAndWait } from './util'
+import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 
-import { RNS } from '../src'
-
-const testAddress = '0x0000000000111111111122222222223333333333'
-
-const deployRNS = async () => {
-  // connect to test network
-  const provider = new providers.JsonRpcProvider('http://localhost:8545')
-  const signer = provider.getSigner()
-
-  // deploy rns registry
-  const rnsRegistryFactory = new ContractFactory(RNSRegistryData.abi, RNSRegistryData.bytecode, signer)
-  const rnsRegistryContract = await rnsRegistryFactory.deploy()
-  await rnsRegistryContract.deployTransaction.wait()
-
-  // deploy rns resolver
-  const addrResolverFactory = new ContractFactory(RNSResolverData.abi, RNSResolverData.bytecode, signer)
-  const addrResolverContract = await addrResolverFactory.deploy(rnsRegistryContract.address)
-  await addrResolverContract.deployTransaction.wait()
-
-  await rnsRegistryContract.setResolver(constants.HashZero, addrResolverContract.address).then((tx: ContractTransaction) => tx.wait())
-
-  return { signer, rnsRegistryContract, addrResolverContract }
-}
-const registerDomain = async (rnsRegistryContract: Contract, address: string) => {
-  await rnsRegistryContract.setSubnodeOwner(constants.HashZero, '0x' + sha3('rsk'), address).then((tx: ContractTransaction) => tx.wait())
-  await rnsRegistryContract.setSubnodeOwner(namehash('rsk'), '0x' + sha3('taringa'), address).then((tx: ContractTransaction) => tx.wait())
-}
+const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)
 
 describe('RNS SDK', () => {
   test('set subnode owner for user1.taringa.rsk', async () => {
-    const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
+    const { taringaOwner, rnsRegistryContract } = await deployRNS()
 
-    // delegate taringa.rsk to test account
-    const address = await signer.getAddress()
-    await registerDomain(rnsRegistryContract, address)
+    const rns = new RNS(rnsRegistryContract.address, taringaOwner)
 
-    const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
-
-    const domain = 'taringa.rsk'
-    const label = 'user1'
-
-    const tx = await rns.setSubnodeOwner(domain, label, testAddress)
+    const tx = await rns.setSubnodeOwner(TEST_TARINGA_DOMAIN, TEST_SUBDOMAIN_LABEL, TEST_ADDRESS)
     await tx.wait()
 
-    expect(await rnsRegistryContract.owner(namehash(`${label}.${domain}`))).toEqual(testAddress)
+    expect(await rnsRegistryContract.owner(hashDomain(TEST_TARINGA_SUBDOMAIN))).toEqual(TEST_ADDRESS)
   })
 
   test('set addr for taringa.rsk', async () => {
-    const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
+    const { taringaOwner, rnsRegistryContract, addrResolverContract, registerSubdomain } = await deployRNS()
+    await registerSubdomain(TEST_SUBDOMAIN_LABEL)
 
-    // delegate taringa.rsk to test account
-    const address = await signer.getAddress()
-    await registerDomain(rnsRegistryContract, address)
-    const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
+    const rns = new RNS(rnsRegistryContract.address, taringaOwner)
 
-    const unsetResolverAddress = await rns.addr('taringa.rsk')
-    expect(unsetResolverAddress).toEqual(constants.AddressZero)
+    const tx = await rns.setAddr(TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS)
+    await tx.wait()
 
-    const setAddressTx = await rns.setAddr('taringa.rsk', address)
-    setAddressTx.wait()
-    const addressResolved = await addrResolverContract.addr(namehash('taringa.rsk'))
-    expect(addressResolved).toEqual(address)
+    expect(await addrResolverContract.addr(hashDomain(TEST_TARINGA_SUBDOMAIN))).toEqual(TEST_ADDRESS)
   })
 
   test('addr for taringa.rsk', async () => {
-    const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
-    // delegate taringa.rsk to test account
-    const address = await signer.getAddress()
-    await registerDomain(rnsRegistryContract, address)
+    const { taringaOwner, rnsRegistryContract, addrResolverContract, registerSubdomain } = await deployRNS()
+    await registerSubdomain(TEST_SUBDOMAIN_LABEL)
+    await sendAndWait(addrResolverContract.setAddr(hashDomain(TEST_TARINGA_SUBDOMAIN), TEST_ADDRESS))
 
-    const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
+    const rns = new RNS(rnsRegistryContract.address, taringaOwner)
 
-    const setAddressTx = await addrResolverContract.setAddr(namehash('taringa.rsk'), address)
-    setAddressTx.wait()
+    const addressResolved = await rns.addr(TEST_TARINGA_SUBDOMAIN)
 
-    const addressResolved = await rns.addr('taringa.rsk')
-    expect(addressResolved).toEqual(address)
-  })
-
-  test('set and get addr for user1.taringa.rsk', async () => {
-    const { signer, rnsRegistryContract, addrResolverContract } = await deployRNS()
-
-    // delegate taringa.rsk to test account
-    const address = await signer.getAddress()
-    await registerDomain(rnsRegistryContract, address)
-    await rnsRegistryContract.setSubnodeOwner(namehash('taringa.rsk'), '0x' + sha3('user1'), address).then((tx: ContractTransaction) => tx.wait())
-    const rns = new RNS(rnsRegistryContract.address, addrResolverContract.address, signer)
-
-    await rns.setAddr('user1.taringa.rsk', address)
-
-    const setAddressTx = await rns.setAddr('user1.taringa.rsk', address)
-    setAddressTx.wait()
-    const addressResolved = await addrResolverContract.addr(namehash('user1.taringa.rsk'))
-    expect(addressResolved).toEqual(address)
+    expect(addressResolved).toEqual(TEST_ADDRESS)
   })
 })
