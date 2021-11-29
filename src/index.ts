@@ -13,25 +13,32 @@ export class RNS {
     this.signer = signer
   }
 
-  async getResolverContract (domain:string) {
-    const resolverAddress = await this.rnsRegistry.resolver(domain)
+  private domainHash = (domain: string) => namehash(domain)
+  private labelHash = (label: string) => '0x' + sha3(label)
+
+  private async getResolverContract (domainHash: string) {
+    const resolverAddress = await this.rnsRegistry.resolver(domainHash)
     return new Contract(resolverAddress, AddrResolverData.abi).connect(this.signer)
   }
 
   setSubnodeOwner (domain: string, label: string, owner: string) {
-    const domainNamehash = namehash(domain)
-    const labelHash = '0x' + sha3(label)
+    const domainHash = this.domainHash(domain)
+    const labelHash = this.labelHash(label)
 
-    return this.rnsRegistry.setSubnodeOwner(domainNamehash, labelHash, owner)
+    return this.rnsRegistry.setSubnodeOwner(domainHash, labelHash, owner)
   }
 
-  async setAddr (domain: string, address: string) {
-    const resolverContract = await this.getResolverContract(namehash(domain))
-    return resolverContract.setAddr(namehash(domain), address)
+  async setAddr (domain: string, addr: string) {
+    const domainHash = this.domainHash(domain)
+    const resolverContract = await this.getResolverContract(domainHash)
+
+    return resolverContract.setAddr(domainHash, addr)
   }
 
-  async addr (label: string) {
-    const resolverContract = await this.getResolverContract(namehash(label))
-    return resolverContract.addr(namehash(label))
+  async addr (domain: string) {
+    const domainHash = this.domainHash(domain)
+    const resolverContract = await this.getResolverContract(domainHash)
+
+    return resolverContract.addr(domainHash)
   }
 }
