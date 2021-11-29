@@ -4,7 +4,6 @@ import { keccak_256 as sha3 } from 'js-sha3'
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import AddrResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
 
-
 export const hashDomain = (domain: string) => namehash(domain)
 export const hashLabel = (label: string) => '0x' + sha3(label)
 

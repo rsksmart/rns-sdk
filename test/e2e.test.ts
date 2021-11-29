@@ -1,14 +1,14 @@
 import RNSResolver from '@rsksmart/rns-resolver.js'
 import 'isomorphic-fetch'
 
-import { RNS } from "../src"
-import { rpcUrl, deployRNSFactory, sendAndWait } from "./util"
+import { RNS } from '../src'
+import { rpcUrl, deployRNSFactory, sendAndWait } from './util'
 import { TEST_ADDRESS } from './testCase'
 
 const deployRNS = deployRNSFactory('taringa', 'user1')
 
 test('e2e', async () => {
-  const { taringaOwner, rnsRegistryContract, addrResolverContract } = await deployRNS()
+  const { taringaOwner, rnsRegistryContract } = await deployRNS()
   const taringaOwnerAddress = await taringaOwner.getAddress()
 
   const rnsSDK = new RNS(rnsRegistryContract.address, taringaOwner)

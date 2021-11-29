@@ -31,7 +31,6 @@ export const deployRNSFactory = (domainLabel: string, subdomainLabel: string) =>
   // set default resolver
   await sendAndWait(rnsRegistryContract.setResolver(constants.HashZero, addrResolverContract.address))
 
-
   const taringaOwner = provider.getSigner(1)
 
   const taringaOwnerAddress = await taringaOwner.getAddress()
