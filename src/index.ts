@@ -2,36 +2,47 @@ import { Signer, Contract } from 'ethers'
 import { hash as namehash } from '@ensdomains/eth-ens-namehash'
 import { keccak_256 as sha3 } from 'js-sha3'
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
-import AddrResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
+
+export const hashDomain = (domain: string) => namehash(domain)
+export const hashLabel = (label: string) => '0x' + sha3(label)
+
+const addrResolverAbi = [
+  'function addr(bytes32 node) public view returns (address)',
+  'function setAddr(bytes32 node, address addr) public'
+]
 
 export class RNS {
   rnsRegistry: Contract
   signer: Signer
 
-  constructor (rnsRegistryAddress: string, rnsResolverAddress: string, signer: Signer) {
+  constructor (rnsRegistryAddress: string, signer: Signer) {
     this.rnsRegistry = new Contract(rnsRegistryAddress, RNSRegistryData.abi).connect(signer)
     this.signer = signer
   }
 
-  async getResolverContract (domain:string) {
-    const resolverAddress = await this.rnsRegistry.resolver(domain)
-    return new Contract(resolverAddress, AddrResolverData.abi).connect(this.signer)
+  private async getAddrResolverContract (domainHash: string) {
+    const resolverAddress = await this.rnsRegistry.resolver(domainHash)
+    return new Contract(resolverAddress, addrResolverAbi).connect(this.signer)
   }
 
   setSubnodeOwner (domain: string, label: string, owner: string) {
-    const domainNamehash = namehash(domain)
-    const labelHash = '0x' + sha3(label)
+    const domainHash = hashDomain(domain)
+    const labelHash = hashLabel(label)
 
-    return this.rnsRegistry.setSubnodeOwner(domainNamehash, labelHash, owner)
+    return this.rnsRegistry.setSubnodeOwner(domainHash, labelHash, owner)
   }
 
-  async setAddr (domain: string, address: string) {
-    const resolverContract = await this.getResolverContract(namehash(domain))
-    return resolverContract.setAddr(namehash(domain), address)
+  async setAddr (domain: string, addr: string) {
+    const domainHash = hashDomain(domain)
+    const resolverContract = await this.getAddrResolverContract(domainHash)
+
+    return resolverContract.setAddr(domainHash, addr)
   }
 
-  async addr (label: string) {
-    const resolverContract = await this.getResolverContract(namehash(label))
-    return resolverContract.addr(namehash(label))
+  async addr (domain: string) {
+    const domainHash = hashDomain(domain)
+    const resolverContract = await this.getAddrResolverContract(domainHash)
+
+    return resolverContract.addr(domainHash)
   }
 }
