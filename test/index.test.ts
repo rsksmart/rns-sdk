@@ -5,12 +5,12 @@ import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TAR
 const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)
 
 describe('RNS SDK', () => {
-  test('set subnode owner for user1.taringa.rsk', async () => {
+  test('set subdomain owner for user1.taringa.rsk', async () => {
     const { taringaOwner, rnsRegistryContract } = await deployRNS()
 
     const rns = new RNS(rnsRegistryContract.address, taringaOwner)
 
-    const tx = await rns.setSubnodeOwner(TEST_TARINGA_DOMAIN, TEST_SUBDOMAIN_LABEL, TEST_ADDRESS)
+    const tx = await rns.setSubdomainOwner(TEST_TARINGA_DOMAIN, TEST_SUBDOMAIN_LABEL, TEST_ADDRESS)
     await tx.wait()
 
     expect(await rnsRegistryContract.owner(hashDomain(TEST_TARINGA_SUBDOMAIN))).toEqual(TEST_ADDRESS)
