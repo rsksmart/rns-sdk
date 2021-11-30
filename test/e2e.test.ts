@@ -19,7 +19,7 @@ test('e2e', async () => {
     defaultCoinType: 30
   })
 
-  await sendAndWait(rnsSDK.setSubnodeOwner('taringa.rsk', 'user1', taringaOwnerAddress))
+  await sendAndWait(rnsSDK.setSubdomainOwner('taringa.rsk', 'user1', taringaOwnerAddress))
   await sendAndWait(rnsSDK.setAddr('user1.taringa.rsk', TEST_ADDRESS))
 
   const addr = await rnsResolver.addr('user1.taringa.rsk')
