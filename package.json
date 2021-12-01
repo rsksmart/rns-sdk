@@ -1,7 +1,7 @@
 {
-  "name": "@rsksmart/rif-web-sdk-template",
+  "name": "@rsksmart/rns-sdk",
   "version": "1.0.0",
-  "description": "RIF Web SDK Template",
+  "description": "RNS SDK",
   "main": "dist/bundle.js",
   "files": [
     "dist"
@@ -16,18 +16,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rsksmart/rif-web-sdk-template.git"
+    "url": "git+https://github.com/rsksmart/rns-sdk.git"
   },
   "keywords": [
     "rsk",
-    "rif"
+    "rif",
+    "rns"
   ],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/rsksmart/rif-web-sdk-template/issues"
+    "url": "https://github.com/rsksmart/rns-sdk/issues"
   },
-  "homepage": "https://github.com/rsksmart/rif-web-sdk-template#readme",
+  "homepage": "https://github.com/rsksmart/rns-sdk#readme",
   "devDependencies": {
     "@rsksmart/rns-resolver": "^2.0.0",
     "@rsksmart/rns-resolver.js": "^1.0.1",
