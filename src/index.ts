@@ -35,6 +35,14 @@ export class RNS {
     return this.rnsRegistry.owner(nameHash)
   }
 
+  async getResolver (rootNode:string) {
+    return this.rnsRegistry.resolver(rootNode)
+  }
+
+  async setResolver (rootNode:string, resolver:string) {
+    await this.rnsRegistry.setResolver(rootNode, resolver)
+  }
+
   async setSubdomainOwner (domain: string, label: string, owner: string) {
     const domainHash = hashDomain(domain)
     const labelHash = hashLabel(label)
