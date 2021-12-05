@@ -26,13 +26,13 @@ export class RNS {
   }
 
   async setOwner (name:string, newOwner:string) {
-    const nameHash = namehash(name)
-    return this.rnsRegistry.setOwner(nameHash, newOwner)
+    const domainHash = hashDomain(name)
+    return this.rnsRegistry.setOwner(domainHash, newOwner)
   }
 
   async getOwner (name:string) {
-    const nameHash = namehash(name)
-    return this.rnsRegistry.owner(nameHash)
+    const domainHash = hashDomain(name)
+    return this.rnsRegistry.owner(domainHash)
   }
 
   async getResolver (rootNode:string) {

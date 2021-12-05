@@ -1,7 +1,6 @@
 import { RNS, hashDomain } from '../src'
 import { deployRNSFactory, sendAndWait, rskLabel } from './util'
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS, TEST_ROOT_NODE, TEST_RESOLVER } from './testCase'
-import { hash as namehash } from '@ensdomains/eth-ens-namehash'
 
 const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)
 
@@ -52,7 +51,7 @@ describe('RNS SDK', () => {
   test('get registry owner', async () => {
     const { rnsOwner, rnsRegistryContract } = await deployRNS()
     const rnsOwnerRegistryContract = rnsRegistryContract.connect(rnsOwner)
-    await rnsOwnerRegistryContract.setOwner(namehash(rskLabel), TEST_ADDRESS)
+    await rnsOwnerRegistryContract.setOwner(hashDomain(rskLabel), TEST_ADDRESS)
     const rns = new RNS(rnsRegistryContract.address, rnsOwner)
     const owner = await rns.getOwner(rskLabel)
     expect(owner).toEqual(TEST_ADDRESS)
