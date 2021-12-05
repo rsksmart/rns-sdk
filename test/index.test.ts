@@ -42,8 +42,7 @@ describe('RNS SDK', () => {
   })
 
   test('set registry owner', async () => {
-    const { rnsOwner, rnsRegistryContract, registerSubdomain } = await deployRNS()
-    await registerSubdomain(TEST_SUBDOMAIN_LABEL)
+    const { rnsOwner, rnsRegistryContract } = await deployRNS()
     const rns = new RNS(rnsRegistryContract.address, rnsOwner)
     await rns.setOwner(rskLabel, TEST_ADDRESS)
     const owner = await rnsRegistryContract.owner(hashDomain(rskLabel))
@@ -51,8 +50,7 @@ describe('RNS SDK', () => {
   })
 
   test('get registry owner', async () => {
-    const { rnsOwner, rnsRegistryContract, registerSubdomain } = await deployRNS()
-    await registerSubdomain(TEST_SUBDOMAIN_LABEL)
+    const { rnsOwner, rnsRegistryContract } = await deployRNS()
     const rnsOwnerRegistryContract = rnsRegistryContract.connect(rnsOwner)
     await rnsOwnerRegistryContract.setOwner(namehash(rskLabel), TEST_ADDRESS)
     const rns = new RNS(rnsRegistryContract.address, rnsOwner)
