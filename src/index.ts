@@ -25,7 +25,17 @@ export class RNS {
     return new Contract(resolverAddress, addrResolverAbi).connect(this.signer)
   }
 
-  setSubdomainOwner (domain: string, label: string, owner: string) {
+  async setOwner (name:string, newOwner:string) {
+    const nameHash = namehash(name)
+    return this.rnsRegistry.setOwner(nameHash, newOwner)
+  }
+
+  async getOwner (name:string) {
+    const nameHash = namehash(name)
+    return this.rnsRegistry.owner(nameHash)
+  }
+
+  async setSubdomainOwner (domain: string, label: string, owner: string) {
     const domainHash = hashDomain(domain)
     const labelHash = hashLabel(label)
 

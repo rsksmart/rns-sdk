@@ -6,7 +6,7 @@ import { hashDomain, hashLabel } from '../src'
 
 export const sendAndWait = (txPromise: Promise<ContractTransaction>) => txPromise.then(tx => tx.wait())
 
-const rskLabel = 'rsk'
+export const rskLabel = 'rsk'
 
 export const rpcUrl = 'http://localhost:8545'
 
@@ -47,6 +47,7 @@ export const deployRNSFactory = (domainLabel: string, subdomainLabel: string) =>
   }
 
   return {
+    rnsOwner,
     taringaOwner,
     rnsRegistryContract: taringaRnsRegistryContract,
     addrResolverContract: addrResolverContract.connect(taringaOwner),
