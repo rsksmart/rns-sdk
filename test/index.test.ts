@@ -42,7 +42,7 @@ describe('RNS SDK', () => {
   })
 
   test('registrar', async () => {
-    // await deployRegistrarFactory()
+     await deployRegistrarFactory()
     console.log('Testing registrar')
   })
 })

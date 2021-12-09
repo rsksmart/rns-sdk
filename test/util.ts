@@ -69,15 +69,16 @@ export const deployRegistrarFactory = async () => {
   const rskOwnerFactory = new ContractFactory(rskOwnerContractData.abi, rskOwnerContractData.bytecode, rnsOwner)
   const rskOwnerContract = await rskOwnerFactory.deploy(constants.AddressZero, rnsRegistryContract.address, hashDomain('rsk'))
   await rskOwnerContract.deployTransaction.wait()
+  console.log('rskOwnerContract: ', rskOwnerContract.address)
   // deploy Name Price
-  const namePriceFactory = new ContractFactory(namePriceContractData.abi, namePriceContractData.bytecode, rnsOwner)
+  /* const namePriceFactory = new ContractFactory(namePriceContractData.abi, namePriceContractData.bytecode, rnsOwner)
   const namePriceContract = await namePriceFactory.deploy()
-  await namePriceContract.deployTransaction.wait()
+  await namePriceContract.deployTransaction.wait() */
 
   // deploy FIFS Address Registrar
-  const fifsAddressRegistrarFactory = new ContractFactory(fifsAddrRegistrarContractData.abi, fifsAddrRegistrarContractData.bytecode, rnsOwner)
+  /* const fifsAddressRegistrarFactory = new ContractFactory(fifsAddrRegistrarContractData.abi, fifsAddrRegistrarContractData.bytecode, rnsOwner)
   const fifsAddressRegistrarContract = await fifsAddressRegistrarFactory.deploy()
-  await fifsAddressRegistrarContract.deployTransaction.wait()
+  await fifsAddressRegistrarContract.deployTransaction.wait() */
 
   // console.log('namePriceContract: ', namePriceContract.address)
   return {
