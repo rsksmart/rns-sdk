@@ -3,7 +3,9 @@ import { providers, ContractFactory, constants, ContractTransaction } from 'ethe
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
 import { hashDomain, hashLabel } from '../src'
-
+import { contractData as rskOwnerContractData } from './rskOwnerContractData'
+import { contractData as namePriceContractData } from './namePriceContractData'
+import { contractData as fifsAddrRegistrarContractData } from './fifsAddrRegistrarContractData'
 export const sendAndWait = (txPromise: Promise<ContractTransaction>) => txPromise.then(tx => tx.wait())
 
 const rskLabel = 'rsk'
@@ -51,5 +53,34 @@ export const deployRNSFactory = (domainLabel: string, subdomainLabel: string) =>
     rnsRegistryContract: taringaRnsRegistryContract,
     addrResolverContract: addrResolverContract.connect(taringaOwner),
     registerSubdomain
+  }
+}
+
+export const deployRegistrarFactory = async () => {
+  // connect to test network
+  const provider = new providers.JsonRpcProvider(rpcUrl)
+  const rnsOwner = provider.getSigner(0)
+  // const rnsOwnerAddress = await rnsOwner.getAddress()
+  // deploy rns registry
+  const rnsRegistryFactory = new ContractFactory(RNSRegistryData.abi, RNSRegistryData.bytecode, rnsOwner)
+  const rnsRegistryContract = await rnsRegistryFactory.deploy()
+  await rnsRegistryContract.deployTransaction.wait()
+  // deploy RSKOwner
+  const rskOwnerFactory = new ContractFactory(rskOwnerContractData.abi, rskOwnerContractData.bytecode, rnsOwner)
+  const rskOwnerContract = await rskOwnerFactory.deploy(constants.AddressZero, rnsRegistryContract.address, hashDomain('rsk'))
+  await rskOwnerContract.deployTransaction.wait()
+  // deploy Name Price
+  const namePriceFactory = new ContractFactory(namePriceContractData.abi, namePriceContractData.bytecode, rnsOwner)
+  const namePriceContract = await namePriceFactory.deploy()
+  await namePriceContract.deployTransaction.wait()
+
+  // deploy FIFS Address Registrar
+  const fifsAddressRegistrarFactory = new ContractFactory(fifsAddrRegistrarContractData.abi, fifsAddrRegistrarContractData.bytecode, rnsOwner)
+  const fifsAddressRegistrarContract = await fifsAddressRegistrarFactory.deploy()
+  await fifsAddressRegistrarContract.deployTransaction.wait()
+
+  // console.log('namePriceContract: ', namePriceContract.address)
+  return {
+
   }
 }

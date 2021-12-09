@@ -1,5 +1,6 @@
 import { RNS, hashDomain } from '../src'
-import { deployRNSFactory, sendAndWait } from './util'
+
+import { deployRNSFactory, deployRegistrarFactory, sendAndWait } from './util'
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 
 const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)
@@ -38,5 +39,10 @@ describe('RNS SDK', () => {
     const addressResolved = await rns.addr(TEST_TARINGA_SUBDOMAIN)
 
     expect(addressResolved).toEqual(TEST_ADDRESS)
+  })
+
+  test('registrar', async () => {
+    // await deployRegistrarFactory()
+    console.log('Testing registrar')
   })
 })
