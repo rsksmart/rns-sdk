@@ -1,6 +1,8 @@
 import { RNS, hashDomain } from '../src'
 
+// @ts-ignore
 import { deployRNSFactory, deployRegistrarFactory, sendAndWait } from './util'
+// @ts-ignore
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 
 const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)
@@ -42,7 +44,7 @@ describe('RNS SDK', () => {
   })
 
   test('registrar', async () => {
-     await deployRegistrarFactory()
+    await deployRegistrarFactory()
     console.log('Testing registrar')
   })
 })

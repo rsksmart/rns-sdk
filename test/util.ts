@@ -3,6 +3,7 @@ import { providers, ContractFactory, constants, ContractTransaction } from 'ethe
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
 import { hashDomain, hashLabel } from '../src'
+// @ts-ignore
 import { contractData as rskOwnerContractData } from './rskOwnerContractData'
 import { contractData as namePriceContractData } from './namePriceContractData'
 import { contractData as fifsAddrRegistrarContractData } from './fifsAddrRegistrarContractData'
@@ -71,10 +72,10 @@ export const deployRegistrarFactory = async () => {
   await rskOwnerContract.deployTransaction.wait()
   console.log('rskOwnerContract: ', rskOwnerContract.address)
   // deploy Name Price
-  /* const namePriceFactory = new ContractFactory(namePriceContractData.abi, namePriceContractData.bytecode, rnsOwner)
+  const namePriceFactory = new ContractFactory(namePriceContractData.abi, namePriceContractData.bytecode, rnsOwner)
   const namePriceContract = await namePriceFactory.deploy()
-  await namePriceContract.deployTransaction.wait() */
-
+  await namePriceContract.deployTransaction.wait()
+  console.log('namePriceContract: ', namePriceContract.address)
   // deploy FIFS Address Registrar
   /* const fifsAddressRegistrarFactory = new ContractFactory(fifsAddrRegistrarContractData.abi, fifsAddrRegistrarContractData.bytecode, rnsOwner)
   const fifsAddressRegistrarContract = await fifsAddressRegistrarFactory.deploy()
