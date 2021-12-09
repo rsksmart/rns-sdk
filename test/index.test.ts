@@ -1,5 +1,5 @@
 import { RNS, hashDomain } from '../src'
-import { deployRNSFactory, sendAndWait, rskLabel } from './util'
+import { deployRNSFactory, deployRegistrarFactory, sendAndWait, rskLabel } from './util'
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS, TEST_ROOT_NODE, TEST_RESOLVER } from './testCase'
 import { hash as namehash } from '@ensdomains/eth-ens-namehash'
 
@@ -76,5 +76,10 @@ describe('RNS SDK', () => {
     await rnsOwnerRegistryContract.setResolver(TEST_ROOT_NODE, TEST_RESOLVER)
     const actualResolver = await rns.getResolver(TEST_ROOT_NODE)
     expect(actualResolver).toEqual(TEST_RESOLVER)
+  })
+
+  test('registrar', async () => {
+    await deployRegistrarFactory()
+    console.log('Testing registrar')
   })
 })
