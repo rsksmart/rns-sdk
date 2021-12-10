@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/rsksmart/rns-sdk#readme",
   "devDependencies": {
+    "@rsksmart/erc677": "^1.0.2",
     "@rsksmart/rns-resolver": "^2.0.0",
     "@rsksmart/rns-resolver.js": "^1.0.1",
     "@types/jest": "^26.0.23",
