@@ -1,6 +1,6 @@
 import { RNS, hashDomain } from '../src'
-import { deployRNSFactory, sendAndWait, rskLabel } from './util'
-import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS, TEST_RESOLVER } from './testCase'
+import { deployRNSFactory, sendAndWait } from './util'
+import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 
 const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)
 
@@ -40,38 +40,45 @@ describe('RNS SDK', () => {
     expect(addressResolved).toEqual(TEST_ADDRESS)
   })
 
-  test('set registry owner', async () => {
-    const { rnsOwner, rnsRegistryContract } = await deployRNS()
-    const rns = new RNS(rnsRegistryContract.address, rnsOwner)
-    await rns.setOwner(rskLabel, TEST_ADDRESS)
-    const owner = await rnsRegistryContract.owner(hashDomain(rskLabel))
+  test('set taringa.rsk owner', async () => {
+    const { taringaOwner, rnsRegistryContract } = await deployRNS()
+
+    const rns = new RNS(rnsRegistryContract.address, taringaOwner)
+    const tx = await rns.setOwner(TEST_TARINGA_DOMAIN, TEST_ADDRESS)
+    await tx.wait()
+
+    const owner = await rnsRegistryContract.owner(hashDomain(TEST_TARINGA_DOMAIN))
     expect(owner).toEqual(TEST_ADDRESS)
   })
 
-  test('get registry owner', async () => {
-    const { rnsOwner, rnsRegistryContract } = await deployRNS()
-    const rnsOwnerRegistryContract = rnsRegistryContract.connect(rnsOwner)
-    await rnsOwnerRegistryContract.setOwner(hashDomain(rskLabel), TEST_ADDRESS)
-    const rns = new RNS(rnsRegistryContract.address, rnsOwner)
-    const owner = await rns.getOwner(rskLabel)
+  test('get taringa.rsk owner', async () => {
+    const { taringaOwner, rnsRegistryContract } = await deployRNS()
+    await sendAndWait(rnsRegistryContract.setOwner(hashDomain(TEST_TARINGA_DOMAIN), TEST_ADDRESS))
+
+    const rns = new RNS(rnsRegistryContract.address, taringaOwner)
+    const owner = await rns.getOwner(TEST_TARINGA_DOMAIN)
+
     expect(owner).toEqual(TEST_ADDRESS)
   })
 
   test('set resolver', async () => {
     const { taringaOwner, rnsRegistryContract } = await deployRNS()
+
     const rns = new RNS(rnsRegistryContract.address, taringaOwner)
-    const taringaOwnerRegistryContract = rnsRegistryContract.connect(taringaOwner)
-    await rns.setResolver(TEST_TARINGA_DOMAIN, TEST_RESOLVER)
-    const actualResolver = await taringaOwnerRegistryContract.resolver(hashDomain(TEST_TARINGA_DOMAIN))
-    expect(actualResolver).toEqual(TEST_RESOLVER)
+    const tx = await rns.setResolver(TEST_TARINGA_DOMAIN, TEST_ADDRESS)
+    await tx.wait()
+
+    const actualResolver = await rnsRegistryContract.resolver(hashDomain(TEST_TARINGA_DOMAIN))
+    expect(actualResolver).toEqual(TEST_ADDRESS)
   })
 
   test('get resolver', async () => {
     const { taringaOwner, rnsRegistryContract } = await deployRNS()
+    await sendAndWait(rnsRegistryContract.setResolver(hashDomain(TEST_TARINGA_DOMAIN), TEST_ADDRESS))
+
     const rns = new RNS(rnsRegistryContract.address, taringaOwner)
-    const taringaOwnerRegistryContract = rnsRegistryContract.connect(taringaOwner)
-    await taringaOwnerRegistryContract.setResolver(hashDomain(TEST_TARINGA_DOMAIN), TEST_RESOLVER)
     const actualResolver = await rns.getResolver(TEST_TARINGA_DOMAIN)
-    expect(actualResolver).toEqual(TEST_RESOLVER)
+
+    expect(actualResolver).toEqual(TEST_ADDRESS)
   })
 })
