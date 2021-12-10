@@ -5,7 +5,9 @@ import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
 import { hashDomain, hashLabel } from '../src'
 // @ts-ignore
 import { contractData as rskOwnerContractData } from './rskOwnerContractData'
+// @ts-ignore
 import { contractData as namePriceContractData } from './namePriceContractData'
+// @ts-ignore
 import { contractData as fifsAddrRegistrarContractData } from './fifsAddrRegistrarContractData'
 export const sendAndWait = (txPromise: Promise<ContractTransaction>) => txPromise.then(tx => tx.wait())
 
@@ -79,9 +81,10 @@ export const deployRegistrarFactory = async () => {
   // deploy FIFS Address Registrar
   /* const fifsAddressRegistrarFactory = new ContractFactory(fifsAddrRegistrarContractData.abi, fifsAddrRegistrarContractData.bytecode, rnsOwner)
   const fifsAddressRegistrarContract = await fifsAddressRegistrarFactory.deploy()
-  await fifsAddressRegistrarContract.deployTransaction.wait() */
+  await fifsAddressRegistrarContract.deployTransaction.wait()
 
-  // console.log('namePriceContract: ', namePriceContract.address)
+  console.log('fifsAddressRegistrarContract: ', fifsAddressRegistrarContract.address) */
+
   return {
 
   }
