@@ -8,7 +8,7 @@ import { contractData as rskOwnerContractData } from './rskOwnerContractData'
 // @ts-ignore
 import { contractData as namePriceContractData } from './namePriceContractData'
 // @ts-ignore
-import { contractData as fifsAddrRegistrarContractData } from './fifsAddrRegistrarContractData'
+// import { contractData as fifsAddrRegistrarContractData } from './fifsAddrRegistrarContractData'
 export const sendAndWait = (txPromise: Promise<ContractTransaction>) => txPromise.then(tx => tx.wait())
 
 const rskLabel = 'rsk'
