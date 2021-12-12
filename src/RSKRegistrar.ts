@@ -1,4 +1,4 @@
-import { Signer, Contract } from 'ethers'
+import {Signer, Contract, ContractTransaction} from 'ethers'
 import { keccak_256 as sha3 } from 'js-sha3'
 import FIFSAddrRegistrarData from './rskregistrar/fifsAddrRegistrar.json'
 
@@ -17,7 +17,7 @@ export class RSKRegistrar {
       console.log({ addr })
     }
 
-    async commitToRegister (domain:string, address:string, secret:string) {
+    async commitToRegister (domain:string, address:string, secret:string): Promise<ContractTransaction> {
       const hash = await this.fifsAddrRegistrar.makeCommitment(`0x${sha3(domain)}`, address, secret)
       return this.fifsAddrRegistrar.commit(hash)
     }
