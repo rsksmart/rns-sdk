@@ -14,7 +14,7 @@ const generateSecret = (strSalt:string) => {
   return '0xd684e2e08b1f363176cb14405d8c1eefb7788c002ba583f1a838130956635ac8'
 }
 describe('RSKRegistrar SDK', () => {
-  test('test on', async () => {
+  test('commit to register', async () => {
     const { rnsOwner, rifToken, rskOwner, fifsAddrRegistrar } = await deployRskRegistrar()
     console.log({ rifToken })
     console.log({ rskOwner })
