@@ -4,13 +4,12 @@ import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
 import ERC677Data from '@rsksmart/erc677/ERC677Data.json'
 
-import RSKOwnerData from './rskregistrar/rskOwner.json'
-import NamePriceData from './rskregistrar/namePrice.json'
-import BytesUtilsData from './rskregistrar/bytesUtils.json'
-import FIFSAddrRegistrarData from './rskregistrar/fifsAddrRegistrar.json'
+import RSKOwnerData from '../src/rskregistrar/rskOwner.json'
+import NamePriceData from '../src/rskregistrar/namePrice.json'
+import BytesUtilsData from '../src/rskregistrar/bytesUtils.json'
+import FIFSAddrRegistrarData from '../src/rskregistrar/fifsAddrRegistrar.json'
 
-import { hashDomain, hashLabel } from '../src'
-
+import { hashDomain, hashLabel } from '../src/RNS'
 
 export const sendAndWait = (txPromise: Promise<ContractTransaction>) => txPromise.then(tx => tx.wait())
 
@@ -102,7 +101,6 @@ export const deployRskRegistrar = async () => {
     hashDomain('rsk'))
   await fifsAddrRegistrar.deployTransaction.wait()
 
-  
   await sendAndWait(rskOwner.addRegistrar(fifsAddrRegistrar.address))
 
   return { rnsOwner, rifToken, rskOwner, fifsAddrRegistrar }

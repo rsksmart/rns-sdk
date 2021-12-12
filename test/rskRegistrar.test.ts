@@ -1,4 +1,5 @@
-import { deployRskRegistrar } from "./util"
+// @ts-ignore
+import { deployRskRegistrar } from './util'
 
 describe('rsk registrar', () => {
   test('dummy', async () => {

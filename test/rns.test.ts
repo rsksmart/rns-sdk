@@ -1,5 +1,7 @@
-import { RNS, hashDomain } from '../src'
+import { RNS, hashDomain } from '../src/RNS'
+// @ts-ignore
 import { deployRNSFactory, sendAndWait } from './util'
+// @ts-ignore
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 
 const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)

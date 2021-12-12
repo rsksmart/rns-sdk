@@ -1,8 +1,10 @@
 import RNSResolver from '@rsksmart/rns-resolver.js'
 import 'isomorphic-fetch'
 
-import { RNS } from '../src'
+import { RNS } from '../src/RNS'
+// @ts-ignore
 import { rpcUrl, deployRNSFactory, sendAndWait } from './util'
+// @ts-ignore
 import { TEST_ADDRESS } from './testCase'
 
 const deployRNS = deployRNSFactory('taringa', 'user1')
