@@ -19,6 +19,7 @@ export const rpcUrl = 'http://localhost:8545'
 
 const deployRNSRegistryAndResolver = async () => {
   const provider = new providers.JsonRpcProvider(rpcUrl)
+
   const rnsOwner = provider.getSigner(0)
 
   // deploy rns registry

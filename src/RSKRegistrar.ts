@@ -1,4 +1,4 @@
-import { Signer, Contract, ContractTransaction } from 'ethers'
+import { Signer, Contract, ContractTransaction, BigNumber } from 'ethers'
 import { hashLabel } from './RNS'
 import Utils from 'web3-utils'
 
@@ -72,9 +72,9 @@ export class RSKRegistrar {
     async register (domain:string, currentAddress:string, salt:string): Promise<ContractTransaction> {
       const currentBalance = await this.rifToken.balanceOf(currentAddress)
       console.log({ currentBalance })
-      const data = getAddrRegisterData(domain, currentAddress, salt, Utils.toBN(1), currentAddress)
-      const rifCost = 1
-      const weiValue = rifCost * (10 ** 18)
+      const data = getAddrRegisterData(hashLabel(domain), currentAddress, salt, BigNumber.from(1), currentAddress)
+      const rifCost = BigNumber.from(1)
+      const weiValue = rifCost.mul(BigNumber.from(10).mul(BigNumber.from(18)))
       const fifsAddrRegistrarAddress = this.fifsAddrRegistrar.address
       return this.rifToken.transferAndCall(fifsAddrRegistrarAddress, weiValue.toString(), data)
     }
