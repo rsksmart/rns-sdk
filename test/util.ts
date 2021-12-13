@@ -1,4 +1,4 @@
-import { providers, ContractFactory, constants, ContractTransaction, BigNumber } from 'ethers'
+import { providers, ContractFactory, constants, ContractTransaction, BigNumber, Contract } from 'ethers'
 
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
@@ -101,7 +101,11 @@ export const deployRskRegistrar = async () => {
     hashDomain('rsk'))
   await fifsAddrRegistrar.deployTransaction.wait()
 
+  const myRifToken = new Contract(rifToken.address, ERC677Data.abi).connect(rnsOwner)
+  const rifBalance = await myRifToken.balanceOf(rnsOwnerAddress)
+  console.log({ rifBalance })
+
   await sendAndWait(rskOwner.addRegistrar(fifsAddrRegistrar.address))
 
-  return { rnsOwner, rifToken, rskOwner, fifsAddrRegistrar }
+  return { rnsOwner, rskOwner, rnsOwnerAddress, rifToken, fifsAddrRegistrar }
 }

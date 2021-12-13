@@ -2,11 +2,11 @@ import { RSKRegistrar } from '../src/RSKRegistrar'
 import { providers } from 'ethers'
 
 describe('RSKRegistrar SDK', () => {
-  test.skip('commit to register', async () => {
+  test.skip('register', async () => {
     const rpcUrl = 'http://localhost:8545'
     const provider = new providers.JsonRpcProvider(rpcUrl)
     const rnsOwner = provider.getSigner(0)
-    const rskRegistrar = new RSKRegistrar('test', '0x2CC82154387BB0eC5A3ff00eA70EaE3D1cbbcD30', '0xB8884c6181B119c504111340E765133265864625', rnsOwner)
+    const rskRegistrar = new RSKRegistrar('0xE2Aa8c413f51e6CAFbd5D823c2eDCB821Ad38c99', '0x2CC82154387BB0eC5A3ff00eA70EaE3D1cbbcD30', '0xB8884c6181B119c504111340E765133265864625', rnsOwner)
     const hash = '0x195d2bd28ce19b2d6b9e786dd0fcca7f74a8c29215da914055d999bcb53ea107'
     const canRevealResponse = await rskRegistrar.canReveal(hash)
     const salt = '0xd684e2e08b1f363176cb14405d8c1eefb7788c002ba583f1a838130956635ac8'

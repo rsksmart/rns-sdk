@@ -53,10 +53,8 @@ export class RSKRegistrar {
     constructor (rskOwnerAddress: string, fifsAddrRegistrarAddress:string, rifTokenAddress:string, signer: Signer) {
       this.rskOwner = new Contract(rskOwnerAddress, RSKOwnerData.abi).connect(signer)
       this.fifsAddrRegistrar = new Contract(fifsAddrRegistrarAddress, FIFSAddrRegistrarData.abi).connect(signer)
-      this.rifToken = new Contract(fifsAddrRegistrarAddress, ERC677Data.abi).connect(signer)
+      this.rifToken = new Contract(rifTokenAddress, ERC677Data.abi).connect(signer)
       this.signer = signer
-      const addr = this.fifsAddrRegistrar.address
-      console.log({ addr })
     }
 
     async commitToRegister (domain:string, address:string, secret:string): Promise<{hash: string, contractTransaction:ContractTransaction}> {
@@ -72,8 +70,10 @@ export class RSKRegistrar {
     }
 
     async register (domain:string, currentAddress:string, salt:string): Promise<ContractTransaction> {
+      const currentBalance = await this.rifToken.balanceOf(currentAddress)
+      console.log({ currentBalance })
       const data = getAddrRegisterData(domain, currentAddress, salt, Utils.toBN(1), currentAddress)
-      const rifCost = 2
+      const rifCost = 1
       const weiValue = rifCost * (10 ** 18)
       const fifsAddrRegistrarAddress = this.fifsAddrRegistrar.address
       return this.rifToken.transferAndCall(fifsAddrRegistrarAddress, weiValue.toString(), data)
