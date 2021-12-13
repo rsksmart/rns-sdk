@@ -16,12 +16,22 @@ const generateSecret = (strSalt:string) => {
 describe('RSKRegistrar SDK', () => {
   test('commit to register', async () => {
     const { rnsOwner, rifToken, rskOwner, fifsAddrRegistrar } = await deployRskRegistrar()
-    console.log({ rifToken })
-    console.log({ rskOwner })
-    const rskRegistrar = new RSKRegistrar('test', fifsAddrRegistrar.address, rnsOwner)
-    const commitToRegisterTx = await rskRegistrar.commitToRegister('luca.rsk', await rnsOwner.getAddress(), generateSecret('test'))
-    console.log({ commitToRegisterTx })
-    const commitToRegisterReceipt = await commitToRegisterTx.wait()
+
+    const rskRegistrar = new RSKRegistrar(rskOwner.address, fifsAddrRegistrar.address, rifToken.address, rnsOwner)
+    console.log(fifsAddrRegistrar.address)
+    console.log(rifToken.address)
+    const salt = generateSecret('test')
+    const { hash, contractTransaction } = await rskRegistrar.commitToRegister('luca.rsk', await rnsOwner.getAddress(), salt)
+    console.log({ hash })
+    console.log({ salt })
+    const commitToRegisterReceipt = await contractTransaction.wait()
     console.log({ commitToRegisterReceipt })
+    /* const available = await rskRegistrar.available('luca2.rsk')
+    console.log({ available }) */
+    /* const canRevealResponse = await rskRegistrar.canReveal(hash)
+    console.log({ canRevealResponse }) */
+    /* const registerTx = await rskRegistrar.register('luca.rsk', await rnsOwner.getAddress(), salt)
+    const registerReceipt = registerTx.wait()
+    console.log({ registerReceipt }) */
   })
 })
