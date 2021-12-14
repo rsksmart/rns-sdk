@@ -1,49 +1,10 @@
-import { Signer, Contract, ContractTransaction, BigNumber } from 'ethers'
-import { hashLabel } from './RNS'
-import Utils from 'web3-utils'
+import { Signer, Contract, ContractTransaction, BigNumber, utils, constants } from 'ethers'
+import { hashLabel } from './hash'
 
 import FIFSAddrRegistrarData from './rskregistrar/fifsAddrRegistrar.json'
 import RSKOwnerData from './rskregistrar/rskOwner.json'
 import ERC677Data from '@rsksmart/erc677/ERC677Data.json'
 
-const utf8ToHexString = (string:string) => {
-  return string ? Utils.asciiToHex(string).slice(2) : ''
-}
-const numberToUint32 = (number:number) => {
-  const hexDuration = Utils.numberToHex(number)
-  let duration = ''
-  for (let i = 0; i < 66 - hexDuration.length; i += 1) {
-    duration += '0'
-  }
-  duration += hexDuration.slice(2)
-  return duration
-}
-
-const getAddrRegisterData = (name:string, owner:string, secret:string, duration:any, addr:string) => {
-  // 0x + 8 bytes
-  const dataSignature = '0x5f7b99d5'
-
-  // 20 bytes
-  const dataOwner = owner.toLowerCase().slice(2)
-
-  // 32 bytes
-  let dataSecret = secret.slice(2)
-  const padding = 64 - dataSecret.length
-  for (let i = 0; i < padding; i += 1) {
-    dataSecret += '0'
-  }
-
-  // 32 bytes
-  const dataDuration = numberToUint32(duration)
-
-  // variable length
-  const dataName = utf8ToHexString(name)
-
-  // 20 bytes
-  const dataAddr = addr.toLowerCase().slice(2)
-
-  return `${dataSignature}${dataOwner}${dataSecret}${dataDuration}${dataAddr}${dataName}`
-}
 export class RSKRegistrar {
     rskOwner: Contract
     fifsAddrRegistrar: Contract
@@ -57,29 +18,45 @@ export class RSKRegistrar {
       this.signer = signer
     }
 
-    async commitToRegister (domain:string, address:string, secret:string): Promise<{hash: string, contractTransaction:ContractTransaction}> {
-      const hash = await this.fifsAddrRegistrar.makeCommitment(hashLabel(domain), address, secret)
-      return {
-        hash,
-        contractTransaction: await this.fifsAddrRegistrar.commit(hash)
-      }
+    available (label: string): Promise<string> {
+      return this.rskOwner.available(hashLabel(label))
     }
 
-    async canReveal (hash:string): Promise<string> {
-      return this.fifsAddrRegistrar.canReveal(hash)
+    ownerOf (label: string): Promise<string> {
+      return this.rskOwner.ownerOf(hashLabel(label))
     }
 
-    async register (domain:string, currentAddress:string, salt:string): Promise<ContractTransaction> {
-      const currentBalance = await this.rifToken.balanceOf(currentAddress)
-      console.log({ currentBalance })
-      const data = getAddrRegisterData(hashLabel(domain), currentAddress, salt, BigNumber.from(1), currentAddress)
-      const rifCost = BigNumber.from(1)
-      const weiValue = rifCost.mul(BigNumber.from(10).mul(BigNumber.from(18)))
-      const fifsAddrRegistrarAddress = this.fifsAddrRegistrar.address
-      return this.rifToken.transferAndCall(fifsAddrRegistrarAddress, weiValue.toString(), data)
+    price (label: string, duration: BigNumber): Promise<BigNumber> {
+      return this.fifsAddrRegistrar.price(label, constants.Zero, duration)
     }
 
-    async available (domain:string): Promise<string> {
-      return this.rskOwner.available(hashLabel(domain))
+    async commitToRegister (label: string, owner: string): Promise<{ secret: string, makeCommitmentTransaction:ContractTransaction, canReveal: () => Promise<boolean> }> {
+      const secret = utils.hexZeroPad('0x' + Buffer.from(utils.randomBytes(32)).toString('hex'), 32)
+      const hash = await this.fifsAddrRegistrar.makeCommitment(hashLabel(label), owner, secret)
+      const makeCommitmentTransaction = await this.fifsAddrRegistrar.commit(hash)
+
+      return { secret, makeCommitmentTransaction, canReveal: () => this.fifsAddrRegistrar.canReveal(hash) }
+    }
+
+    async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<ContractTransaction> {
+      /* Encoding:
+        | signature  |  4 bytes      - offset  0
+        | owner      | 20 bytes      - offset  4
+        | secret     | 32 bytes      - offest 24
+        | duration   | 32 bytes      - offset 56
+        | addr       | 20 bytes      - offset 88
+        | name       | variable size - offset 108
+      */
+
+      const _signature = '0x5f7b99d5'
+      const _owner = owner.slice(2).toLowerCase()
+      const _secret = secret.slice(2)
+      const _duration = utils.hexZeroPad(duration.toHexString(), 32).slice(2)
+      const _addr = addr ? addr.slice(2).toLowerCase() : _owner
+      const _name = Buffer.from(utils.toUtf8Bytes(label)).toString('hex')
+
+      const data = `${_signature}${_owner}${_secret}${_duration}${_addr}${_name}`
+
+      return this.rifToken.transferAndCall(this.fifsAddrRegistrar.address, amount, data)
     }
 }

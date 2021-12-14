@@ -1,19 +1,20 @@
-import { providers, ContractFactory, constants, ContractTransaction, BigNumber, Contract } from 'ethers'
+import { providers, ContractFactory, constants, ContractTransaction, BigNumber } from 'ethers'
 
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
 import ERC677Data from '@rsksmart/erc677/ERC677Data.json'
 
+import TokenRegistrarData from '../src/rskregistrar/tokenRegistrar.json'
 import RSKOwnerData from '../src/rskregistrar/rskOwner.json'
 import NamePriceData from '../src/rskregistrar/namePrice.json'
 import BytesUtilsData from '../src/rskregistrar/bytesUtils.json'
 import FIFSAddrRegistrarData from '../src/rskregistrar/fifsAddrRegistrar.json'
 
-import { hashDomain, hashLabel } from '../src/RNS'
+import { hashDomain, hashLabel } from '../src/hash'
 
 export const sendAndWait = (txPromise: Promise<ContractTransaction>) => txPromise.then(tx => tx.wait())
 
-const rskLabel = 'rsk'
+export const rskLabel = 'rsk'
 
 export const rpcUrl = 'http://localhost:8545'
 
@@ -67,46 +68,57 @@ export const deployRNSFactory = (domainLabel: string, subdomainLabel: string) =>
   }
 }
 
+export const toWei = (value: string) => BigNumber.from(value).mul(BigNumber.from('10').pow(BigNumber.from('18')))
+
 export const deployRskRegistrar = async () => {
-  const { rnsOwner, rnsOwnerAddress, rnsRegistryContract } = await deployRNSRegistryAndResolver()
+  const { provider, rnsOwner, rnsOwnerAddress, rnsRegistryContract, addrResolverContract } = await deployRNSRegistryAndResolver()
 
   const rifTokenFactory = new ContractFactory(ERC677Data.abi, ERC677Data.bytecode, rnsOwner)
-  const rifToken = await rifTokenFactory.deploy(
+  const rifTokenContract = await rifTokenFactory.deploy(
     rnsOwnerAddress,
-    BigNumber.from('1000').mul(BigNumber.from('10').pow(BigNumber.from('10'))),
+    toWei('1000'),
     'Testing RIF',
     'RIF',
     BigNumber.from('18')
   )
-  await rifToken.deployTransaction.wait()
+  await rifTokenContract.deployTransaction.wait()
+
+  const tokenRegistrarFactory = new ContractFactory(TokenRegistrarData.abi, TokenRegistrarData.bytecode, rnsOwner)
+  const tokenRegistrarContract = await tokenRegistrarFactory.deploy(rnsRegistryContract.address, hashDomain(rskLabel), rifTokenContract.address)
+  await tokenRegistrarContract.deployTransaction.wait()
 
   const rskOwnerFactory = new ContractFactory(RSKOwnerData.abi, RSKOwnerData.bytecode, rnsOwner)
-  const rskOwner = await rskOwnerFactory.deploy(constants.AddressZero, rnsRegistryContract.address, hashDomain(rskLabel))
-  await rskOwner.deployTransaction.wait()
+  const rskOwnerContract = await rskOwnerFactory.deploy(tokenRegistrarContract.address, rnsRegistryContract.address, hashDomain(rskLabel))
+  await rskOwnerContract.deployTransaction.wait()
 
   const namePriceFactory = new ContractFactory(NamePriceData.abi, NamePriceData.bytecode, rnsOwner)
-  const namePrice = await namePriceFactory.deploy()
-  await namePrice.deployTransaction.wait()
+  const namePriceContract = await namePriceFactory.deploy()
+  await namePriceContract.deployTransaction.wait()
 
   const bytesUtilsFactory = new ContractFactory(BytesUtilsData.abi, BytesUtilsData.bytecode, rnsOwner)
-  const bytesUtils = await bytesUtilsFactory.deploy()
-  await bytesUtils.deployTransaction.wait()
+  const bytesUtilsContract = await bytesUtilsFactory.deploy()
+  await bytesUtilsContract.deployTransaction.wait()
 
-  const fifsAddrRegistrarFactory = new ContractFactory(FIFSAddrRegistrarData.abi, FIFSAddrRegistrarData.bytecode.replace(/__BytesUtils____________________________/g, bytesUtils.address.slice(2).toLowerCase()), rnsOwner)
-  const fifsAddrRegistrar = await fifsAddrRegistrarFactory.deploy(
-    rifToken.address,
-    rskOwner.address,
+  const fifsAddrRegistrarFactory = new ContractFactory(
+    FIFSAddrRegistrarData.abi,
+    FIFSAddrRegistrarData.bytecode.replace(/__BytesUtils____________________________/g, bytesUtilsContract.address.slice(2).toLowerCase()), // linking
+    rnsOwner
+  )
+  const fifsAddrRegistrarContract = await fifsAddrRegistrarFactory.deploy(
+    rifTokenContract.address,
+    rskOwnerContract.address,
     rnsOwnerAddress,
-    namePrice.address,
+    namePriceContract.address,
     rnsRegistryContract.address,
-    hashDomain('rsk'))
-  await fifsAddrRegistrar.deployTransaction.wait()
+    hashDomain(rskLabel))
+  await fifsAddrRegistrarContract.deployTransaction.wait()
 
-  const myRifToken = new Contract(rifToken.address, ERC677Data.abi).connect(rnsOwner)
-  const rifBalance = await myRifToken.balanceOf(rnsOwnerAddress)
-  console.log({ rifBalance })
+  await sendAndWait(rskOwnerContract.addRegistrar(fifsAddrRegistrarContract.address))
+  await sendAndWait(rnsRegistryContract.setSubnodeOwner(constants.HashZero, hashLabel(rskLabel), rskOwnerContract.address))
 
-  await sendAndWait(rskOwner.addRegistrar(fifsAddrRegistrar.address))
+  const testAccount = provider.getSigner(1)
 
-  return { rnsOwner, rskOwner, rnsOwnerAddress, rifToken, fifsAddrRegistrar }
+  await sendAndWait(rifTokenContract.transfer(await testAccount.getAddress(), toWei('100')))
+
+  return { provider, rnsRegistryContract, addrResolverContract, rskOwnerContract, rifTokenContract, fifsAddrRegistrarContract, testAccount }
 }
