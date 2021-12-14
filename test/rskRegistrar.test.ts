@@ -1,9 +1,9 @@
-import { BigNumber, providers } from 'ethers'
+import { BigNumber } from 'ethers'
 
 // @ts-ignore
 import { deployRskRegistrar, rskLabel } from './util'
 import { RSKRegistrar } from '../src/RSKRegistrar'
-import { hashDomain, hashLabel } from '../src/hash'
+import { hashDomain } from '../src/hash'
 
 describe('rsk registrar', () => {
   test('e2e', async () => {

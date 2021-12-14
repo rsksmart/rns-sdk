@@ -1,4 +1,5 @@
-import { RNS, hashDomain } from '../src/hash'
+import { RNS } from '../src/RNS'
+import { hashDomain } from '../src/hash'
 // @ts-ignore
 import { deployRNSFactory, sendAndWait } from './util'
 // @ts-ignore
