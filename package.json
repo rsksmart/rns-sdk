@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/rns-sdk",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "RNS SDK",
   "main": "dist/bundle.js",
   "files": [
@@ -30,6 +30,8 @@
   },
   "homepage": "https://github.com/rsksmart/rns-sdk#readme",
   "devDependencies": {
+    "@rsksmart/erc677": "^1.0.2",
+    "@rsksmart/rns-registry": "^1.0.4",
     "@rsksmart/rns-resolver": "^2.0.0",
     "@rsksmart/rns-resolver.js": "^1.0.1",
     "@types/jest": "^26.0.23",
@@ -51,7 +53,6 @@
   },
   "dependencies": {
     "@ensdomains/eth-ens-namehash": "^2.0.15",
-    "@rsksmart/rns-registry": "^1.0.4",
     "ethers": "^5.5.1",
     "js-sha3": "^0.8.0"
   }
