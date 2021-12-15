@@ -1,4 +1,4 @@
-import { providers, ContractFactory, constants, ContractTransaction, BigNumber } from 'ethers'
+import { providers, ContractFactory, constants, ContractTransaction, BigNumber, utils, Contract, Signer } from 'ethers'
 
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
@@ -10,7 +10,8 @@ import NamePriceData from '../src/rskregistrar/namePrice.json'
 import BytesUtilsData from '../src/rskregistrar/bytesUtils.json'
 import FIFSAddrRegistrarData from '../src/rskregistrar/fifsAddrRegistrar.json'
 
-import { hashDomain, hashLabel } from '../src/hash'
+import { generateSecret, hashDomain, hashLabel } from '../src/hash'
+import { RSKRegistrar } from '../src/RSKRegistrar'
 
 export const sendAndWait = (txPromise: Promise<ContractTransaction>) => txPromise.then(tx => tx.wait())
 
@@ -121,4 +122,30 @@ export const deployRskRegistrar = async () => {
   await sendAndWait(rifTokenContract.transfer(await testAccount.getAddress(), toWei('100')))
 
   return { provider, rnsRegistryContract, addrResolverContract, rskOwnerContract, rifTokenContract, fifsAddrRegistrarContract, testAccount }
+}
+export const registerDomain = async (label:string, provider:providers.JsonRpcProvider, rskOwnerContract:Contract, fifsAddrRegistrarContract:Contract, rifTokenContract:Contract, testAccount:Signer) => {
+  const owner = await testAccount.getAddress()
+  const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
+  const secret = generateSecret()
+  const hash = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
+  const makeCommitmentTransactionTx = await fifsAddrRegistrarContract.commit(hash)
+  await makeCommitmentTransactionTx.wait()
+
+  await provider.send('evm_increaseTime', [1001])
+  await provider.send('evm_mine', [])
+
+  const duration = BigNumber.from('1')
+  const price = await rskRegistrar.price(label, duration)
+
+  const _signature = '0x5f7b99d5'
+  const _owner = owner.slice(2).toLowerCase()
+  const _secret = secret.slice(2)
+  const _duration = utils.hexZeroPad(duration.toHexString(), 32).slice(2)
+  const _addr = _owner
+  const _name = Buffer.from(utils.toUtf8Bytes(label)).toString('hex')
+
+  const data = `${_signature}${_owner}${_secret}${_duration}${_addr}${_name}`
+
+  const tx = await rifTokenContract.transferAndCall(fifsAddrRegistrarContract.address, price, data)
+  await tx.wait()
 }
