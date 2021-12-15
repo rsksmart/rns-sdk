@@ -1,10 +1,12 @@
 import { Signer, Contract, ContractTransaction } from 'ethers'
 import { hashDomain, hashLabel } from './hash'
-import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 
-const addrResolverAbi = [
-  'function addr(bytes32 node) public view returns (address)',
-  'function setAddr(bytes32 node, address addr) public'
+const rnsRegistryAbi = [
+  'function owner(bytes32 node) public view returns (address)',
+  'function resolver(bytes32 node) public view returns (address)',
+  'function setOwner(bytes32 node, address ownerAddress) public',
+  'function setSubnodeOwner(bytes32 node, bytes32 label, address ownerAddress) public',
+  'function setResolver(bytes32 node, address resolverAddress) public'
 ]
 
 export class RNS {
@@ -12,7 +14,7 @@ export class RNS {
   signer: Signer
 
   constructor (rnsRegistryAddress: string, signer: Signer) {
-    this.rnsRegistry = new Contract(rnsRegistryAddress, RNSRegistryData.abi).connect(signer)
+    this.rnsRegistry = new Contract(rnsRegistryAddress, rnsRegistryAbi).connect(signer)
     this.signer = signer
   }
 
@@ -43,25 +45,5 @@ export class RNS {
     const labelHash = hashLabel(label)
 
     return this.rnsRegistry.setSubnodeOwner(domainHash, labelHash, owner)
-  }
-
-  // resolver
-  private async getAddrResolverContract (domainHash: string): Promise<Contract> {
-    const resolverAddress = await this.rnsRegistry.resolver(domainHash)
-    return new Contract(resolverAddress, addrResolverAbi).connect(this.signer)
-  }
-
-  async setAddr (domain: string, addr: string): Promise<ContractTransaction> {
-    const domainHash = hashDomain(domain)
-    const resolverContract = await this.getAddrResolverContract(domainHash)
-
-    return resolverContract.setAddr(domainHash, addr)
-  }
-
-  async addr (domain: string): Promise<string> {
-    const domainHash = hashDomain(domain)
-    const resolverContract = await this.getAddrResolverContract(domainHash)
-
-    return resolverContract.addr(domainHash)
   }
 }

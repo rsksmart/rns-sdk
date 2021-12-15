@@ -1,50 +1,11 @@
 import { BigNumber, utils } from 'ethers'
 
-import { deployRskRegistrar, rskLabel, registerDomain } from './util'
+import { deployRskRegistrar, registerDomain } from './util'
 import { RSKRegistrar } from '../src/RSKRegistrar'
-import { hashDomain, hashLabel } from '../src/hash'
+import { hashLabel } from '../src/hash'
 import { generateSecret } from '../src/random'
 
 describe('rsk registrar', () => {
-  test('e2e', async () => {
-    const { provider, rnsRegistryContract, addrResolverContract, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
-
-    const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
-
-    const label = 'domain-to-register'
-    const owner = await testAccount.getAddress()
-    const duration = BigNumber.from('1')
-
-    expect(await rskRegistrar.available(label)).toBeTruthy()
-
-    const price = await rskRegistrar.price(label, duration)
-
-    const { makeCommitmentTransaction, secret, canReveal } = await rskRegistrar.commitToRegister(label, owner)
-
-    await makeCommitmentTransaction.wait()
-
-    await provider.send('evm_increaseTime', [1001])
-    await provider.send('evm_mine', [])
-    const commitmentReady = await canReveal()
-    expect(commitmentReady).toEqual(true)
-
-    const registerTx = await rskRegistrar.register(
-      label,
-      owner,
-      secret,
-      duration,
-      price
-    )
-
-    const receipt = await registerTx.wait()
-    expect(receipt.status).toEqual(1)
-    expect(await rskRegistrar.available(label)).toBeFalsy()
-    expect(await rskRegistrar.ownerOf(label)).toEqual(owner)
-    expect(await rnsRegistryContract.owner(hashDomain(`${label}.${rskLabel}`))).toEqual(owner)
-    expect(await rnsRegistryContract.resolver(hashDomain(`${label}.${rskLabel}`))).toEqual(addrResolverContract.address)
-    expect(await addrResolverContract.addr(hashDomain(`${label}.${rskLabel}`))).toEqual(owner)
-  })
-
   test('constructor', async () => {
     const { rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
 

@@ -36,20 +36,113 @@
 
 ## Usage
 
-Initialize the library
+The library supports 2 modules:
+- .rsk domains registrations
+- RNS domains admin
+- Domain address resolution
+
+You will need to use this addresses to initialize the library:
+
+| Contract name | RSK Mainnet | RSK Testnet |
+| - | - | - |
+| RNS Registry (`rsnRegistryAddress`) | [`0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5`](https://explorer.rsk.co/address/0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5) | [`0x7d284aaac6e925aad802a53c0c69efe3764597b8`](https://explorer.testnet.rsk.co/address/0x7d284aaac6e925aad802a53c0c69efe3764597b8) |
+| RIF Token ERC-677 ERC-20 (`rifTokenAddress`) | [`0x2acc95758f8b5f583470ba265eb685a8f45fc9d5`](https://explorer.rsk.co/address/0x2acc95758f8b5f583470ba265eb685a8f45fc9d5) | [`0x19f64674d8a5b4e652319f5e239efd3bc969a1fe`](https://explorer.testnet.rsk.co/address/0x19f64674d8a5b4e652319f5e239efd3bc969a1fe) |
+| ERC-721 .rsk domains token (`rskOwnerAddress`) | [`0x45d3e4fb311982a06ba52359d44cb4f5980e0ef1`](https://explorer.rsk.co/address/0x45d3e4fb311982a06ba52359d44cb4f5980e0ef1) | [`0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71`](https://explorer.testnet.rsk.co/address/0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71) |
+| .rsk domains registrar (`fifsAddrRegistrarAddress`) | [`0xd9c79ced86ecf49f5e4a973594634c83197c35ab`](https://explorer.rsk.co/address/0xd9c79ced86ecf49f5e4a973594634c83197c35ab) | [`0x90734bd6bf96250a7b262e2bc34284b0d47c1e8d`](https://explorer.testnet.rsk.co/address/0x90734bd6bf96250a7b262e2bc34284b0d47c1e8d) |
+
+> See also RNS Resolver library [`@rsksmart/rns-resolver.js`](https://github.com/rsksmart/rns-resolver.js) to resolve domains following the standard protocol
+
+### .rsk domain registrations
+
+You can register .rsk domains paying with RIF Tokens. First, create the instance of `RSKRegistrar`
 
 ```typescript
 import { Signer } from 'ethers'
+import { RSKRegistrar } from '@rsksmart/rns-sdk'
+
+let signer: Signer
+const rns = new RNS(registryAddress, signer)
+const rskRegistrar = new RSKRegistrar(rskOwnerAddress, fifsAddrRegistrarAddress, rifTokenAddress, testAccount)
+```
+
+Query price and availability
+
+```typescript
+const label = 'taringa'
+
+const available = await rskRegistrar.available(label)
+
+const duration = BigNumber.from('1')
+
+const price = await rskRegistrar.price(label, duration)
+```
+
+Register the domain
+
+```typescript
+const { makeCommitmentTransaction, secret, canReveal } = await rskRegistrar.commitToRegister(label, testAccountAddress)
+
+await makeCommitmentTransaction.wait()
+
+// you need to wait at least for one minute, you can build
+// your own polling strategy checking canReveal to ensure
+// it is the correct time to submit the register tx
+const commitmentReady = await canReveal()
+
+if (!commitmentReady) throw
+
+const registerTx = await rskRegistrar.register(
+  label,
+  testAccountAddress,
+  secret,
+  duration,
+  price
+)
+
+await registerTx.wait()
+```
+
+### Domain management
+
+Create `RNS` instance
+
+```typescript
+import { Signer } from 'ethers'
+import { RNS } from '@rsksmart/rns-sdk'
 
 let signer: Signer
 const rns = new RNS(registryAddress, signer)
 ```
 
-Registry address:
-- Testnet: `0x7d284aaac6e925aad802a53c0c69efe3764597b8`
-- Mainnet: `0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5`
+#### Owner
 
-### Subdomains
+Get and set the controller of a domain you own
+
+```typescript
+const domain = 'user1.taringa.rsk'
+const newController = '0xb774...d771'
+
+const tx = await rns.setOwner(domain, newController)
+await tx.wait()
+
+const controller = await rns.owner(domain)
+```
+
+#### Resolver
+
+Get and set the resolver of a domain you own
+
+```typescript
+const domain = 'user1.taringa.rsk'
+const resolverAddr = '0xb774...d771'
+
+const tx = await rns.setResolver(domain, resolverAddr)
+await tx.wait()
+
+const controller = await rns.resolver(domain)
+```
+
+#### Subdomains
 
 Set the owner of a subdomain of a domain you own
 
@@ -62,7 +155,17 @@ const tx = await rns.setSubdmoainOwner(domain, subdomainLabel, ownerAddress)
 await tx.wait()
 ```
 
-### Resolver
+### Address resolution
+
+Create `AddrResolver` instance
+
+```typescript
+import { Signer } from 'ethers'
+import { AddrResolver } from '@rsksmart/rns-sdk'
+
+let signer: Signer
+const addrResolver = new AddrResolver(registryAddress, signer)
+```
 
 Get and set the address of a domain or subdomain you own
 
@@ -70,10 +173,10 @@ Get and set the address of a domain or subdomain you own
 const domain = 'user1.taringa.rsk'
 const addr = '0xb774...d771'
 
-const tx = await rns.setAddr(domain, ownerAddress)
+const tx = await addrResolver.setAddr(domain, ownerAddress)
 await tx.wait()
 
-const addr = await rns.addr(domain)
+const addr = await addrResolver.addr(domain)
 ```
 
 ## Run for development
