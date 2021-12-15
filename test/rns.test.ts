@@ -1,8 +1,6 @@
 import { RNS } from '../src/RNS'
 import { hashDomain } from '../src/hash'
-// @ts-ignore
 import { deployRNSFactory, sendAndWait } from './util'
-// @ts-ignore
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 
 const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)
@@ -21,7 +19,7 @@ describe('RNS SDK', () => {
 
   test('set addr for taringa.rsk', async () => {
     const { taringaOwner, rnsRegistryContract, addrResolverContract, registerSubdomain } = await deployRNS()
-    await registerSubdomain(TEST_SUBDOMAIN_LABEL)
+    await registerSubdomain()
 
     const rns = new RNS(rnsRegistryContract.address, taringaOwner)
 
@@ -33,7 +31,7 @@ describe('RNS SDK', () => {
 
   test('addr for taringa.rsk', async () => {
     const { taringaOwner, rnsRegistryContract, addrResolverContract, registerSubdomain } = await deployRNS()
-    await registerSubdomain(TEST_SUBDOMAIN_LABEL)
+    await registerSubdomain()
     await sendAndWait(addrResolverContract.setAddr(hashDomain(TEST_TARINGA_SUBDOMAIN), TEST_ADDRESS))
 
     const rns = new RNS(rnsRegistryContract.address, taringaOwner)

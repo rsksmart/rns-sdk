@@ -1,19 +1,20 @@
-import { providers, ContractFactory, constants, ContractTransaction, BigNumber, utils, Contract, Signer } from 'ethers'
+import { providers, ContractFactory, constants, ContractTransaction, BigNumber, utils, Contract, Signer, ContractReceipt } from 'ethers'
 
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
 import ERC677Data from '@rsksmart/erc677/ERC677Data.json'
 
-import TokenRegistrarData from '../src/rskregistrar/tokenRegistrar.json'
-import RSKOwnerData from '../src/rskregistrar/rskOwner.json'
-import NamePriceData from '../src/rskregistrar/namePrice.json'
-import BytesUtilsData from '../src/rskregistrar/bytesUtils.json'
-import FIFSAddrRegistrarData from '../src/rskregistrar/fifsAddrRegistrar.json'
+import TokenRegistrarData from './rskregistrar/tokenRegistrar.json'
+import RSKOwnerData from './rskregistrar/rskOwner.json'
+import NamePriceData from './rskregistrar/namePrice.json'
+import BytesUtilsData from './rskregistrar/bytesUtils.json'
+import FIFSAddrRegistrarData from './rskregistrar/fifsAddrRegistrar.json'
 
-import { generateSecret, hashDomain, hashLabel } from '../src/hash'
+import { hashDomain, hashLabel } from '../src/hash'
+import { generateSecret } from '../src/random'
 import { RSKRegistrar } from '../src/RSKRegistrar'
 
-export const sendAndWait = (txPromise: Promise<ContractTransaction>) => txPromise.then(tx => tx.wait())
+export const sendAndWait = (txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> => txPromise.then(tx => tx.wait())
 
 export const rskLabel = 'rsk'
 
@@ -42,7 +43,12 @@ const deployRNSRegistryAndResolver = async () => {
   return { provider, rnsOwner, rnsOwnerAddress, rnsRegistryContract, addrResolverContract }
 }
 
-export const deployRNSFactory = (domainLabel: string, subdomainLabel: string) => async () => {
+export const deployRNSFactory = (domainLabel: string, subdomainLabel: string): ()=> Promise<{
+  taringaOwner: Signer,
+  rnsRegistryContract: Contract,
+  addrResolverContract: Contract,
+  registerSubdomain: ()=> Promise<void>
+}> => async () => {
   // connect to test network
   const { provider, rnsOwnerAddress, rnsRegistryContract, addrResolverContract } = await deployRNSRegistryAndResolver()
 
@@ -57,7 +63,7 @@ export const deployRNSFactory = (domainLabel: string, subdomainLabel: string) =>
   // registers a given subdomain of taringa.rsk for taringaOwner
   const taringaRnsRegistryContract = rnsRegistryContract.connect(taringaOwner)
 
-  const registerSubdomain = async (label: string) => {
+  const registerSubdomain = async () => {
     await sendAndWait(taringaRnsRegistryContract.setSubnodeOwner(hashDomain(`${domainLabel}.${rskLabel}`), hashLabel(subdomainLabel), taringaOwnerAddress))
   }
 
@@ -69,9 +75,17 @@ export const deployRNSFactory = (domainLabel: string, subdomainLabel: string) =>
   }
 }
 
-export const toWei = (value: string) => BigNumber.from(value).mul(BigNumber.from('10').pow(BigNumber.from('18')))
+export const toWei = (value: string): BigNumber => BigNumber.from(value).mul(BigNumber.from('10').pow(BigNumber.from('18')))
 
-export const deployRskRegistrar = async () => {
+export const deployRskRegistrar = async (): Promise<{
+  provider: providers.JsonRpcProvider,
+  rnsRegistryContract: Contract,
+  addrResolverContract: Contract,
+  rskOwnerContract: Contract,
+  rifTokenContract: Contract,
+  fifsAddrRegistrarContract: Contract,
+  testAccount: Signer
+}> => {
   const { provider, rnsOwner, rnsOwnerAddress, rnsRegistryContract, addrResolverContract } = await deployRNSRegistryAndResolver()
 
   const rifTokenFactory = new ContractFactory(ERC677Data.abi, ERC677Data.bytecode, rnsOwner)
@@ -123,7 +137,8 @@ export const deployRskRegistrar = async () => {
 
   return { provider, rnsRegistryContract, addrResolverContract, rskOwnerContract, rifTokenContract, fifsAddrRegistrarContract, testAccount }
 }
-export const registerDomain = async (label:string, provider:providers.JsonRpcProvider, rskOwnerContract:Contract, fifsAddrRegistrarContract:Contract, rifTokenContract:Contract, testAccount:Signer) => {
+
+export const registerDomain = async (label: string, provider: providers.JsonRpcProvider, rskOwnerContract: Contract, fifsAddrRegistrarContract: Contract, rifTokenContract: Contract, testAccount: Signer): Promise<void> => {
   const owner = await testAccount.getAddress()
   const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
   const secret = generateSecret()

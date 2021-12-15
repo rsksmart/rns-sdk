@@ -1,9 +1,22 @@
 import { Signer, Contract, ContractTransaction, BigNumber, utils, constants } from 'ethers'
 import { hashLabel } from './hash'
+import { generateSecret } from './random'
 
-import FIFSAddrRegistrarData from './rskregistrar/fifsAddrRegistrar.json'
-import RSKOwnerData from './rskregistrar/rskOwner.json'
-import ERC677Data from '@rsksmart/erc677/ERC677Data.json'
+const rskOwnerAbi = [
+  'function available(uint256 tokenId) public view returns(bool)',
+  'function ownerOf(uint256 tokenId) public view returns (address)'
+]
+
+const fifsAddrRegistrarAbi = [
+  'function price (string memory name, uint expires, uint duration) public view returns(uint)',
+  'function makeCommitment (bytes32 label, address nameOwner, bytes32 secret) public pure returns (bytes32)',
+  'function commit(bytes32 commitment) external',
+  'function canReveal(bytes32 commitment) public view returns (bool)'
+]
+
+const erc677Abi = [
+  'function transferAndCall(address to, uint256 value, bytes memory data) external returns (bool)'
+]
 
 export class RSKRegistrar {
     rskOwner: Contract
@@ -11,10 +24,10 @@ export class RSKRegistrar {
     rifToken: Contract
     signer: Signer
 
-    constructor (rskOwnerAddress: string, fifsAddrRegistrarAddress:string, rifTokenAddress:string, signer: Signer) {
-      this.rskOwner = new Contract(rskOwnerAddress, RSKOwnerData.abi).connect(signer)
-      this.fifsAddrRegistrar = new Contract(fifsAddrRegistrarAddress, FIFSAddrRegistrarData.abi).connect(signer)
-      this.rifToken = new Contract(rifTokenAddress, ERC677Data.abi).connect(signer)
+    constructor (rskOwnerAddress: string, fifsAddrRegistrarAddress: string, rifTokenAddress: string, signer: Signer) {
+      this.rskOwner = new Contract(rskOwnerAddress, rskOwnerAbi).connect(signer)
+      this.fifsAddrRegistrar = new Contract(fifsAddrRegistrarAddress, fifsAddrRegistrarAbi).connect(signer)
+      this.rifToken = new Contract(rifTokenAddress, erc677Abi).connect(signer)
       this.signer = signer
     }
 
@@ -30,8 +43,8 @@ export class RSKRegistrar {
       return this.fifsAddrRegistrar.price(label, constants.Zero, duration)
     }
 
-    async commitToRegister (label: string, owner: string): Promise<{ secret: string, makeCommitmentTransaction:ContractTransaction, canReveal: () => Promise<boolean> }> {
-      const secret = utils.hexZeroPad('0x' + Buffer.from(utils.randomBytes(32)).toString('hex'), 32)
+    async commitToRegister (label: string, owner: string): Promise<{ secret: string, makeCommitmentTransaction: ContractTransaction, canReveal: ()=> Promise<boolean> }> {
+      const secret = generateSecret()
       const hash = await this.fifsAddrRegistrar.makeCommitment(hashLabel(label), owner, secret)
       const makeCommitmentTransaction = await this.fifsAddrRegistrar.commit(hash)
 

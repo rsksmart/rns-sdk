@@ -1,10 +1,10 @@
 import { BigNumber, utils } from 'ethers'
 
-// @ts-ignore
 import { deployRskRegistrar, rskLabel, registerDomain } from './util'
 import { RSKRegistrar } from '../src/RSKRegistrar'
-import { generateSecret, hashDomain, hashLabel } from '../src/hash'
-const successfulTransaction = 1
+import { hashDomain, hashLabel } from '../src/hash'
+import { generateSecret } from '../src/random'
+
 describe('rsk registrar', () => {
   test('e2e', async () => {
     const { provider, rnsRegistryContract, addrResolverContract, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
@@ -53,6 +53,7 @@ describe('rsk registrar', () => {
     expect(rskRegistrar.fifsAddrRegistrar.address).toEqual(fifsAddrRegistrarContract.address)
     expect(rskRegistrar.rifToken.address).toEqual(rifTokenContract.address)
   })
+
   test('available', async () => {
     const label = 'available_domain'
     const { provider, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
@@ -64,6 +65,7 @@ describe('rsk registrar', () => {
     const availabilityAfterRegistration = await rskRegistrar.available(label)
     expect(availabilityAfterRegistration).toEqual(false)
   })
+
   test('price', async () => {
     const label = 'domain-to-check-price'
     const { rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
@@ -72,6 +74,7 @@ describe('rsk registrar', () => {
     const price = await rskRegistrar.price(label, duration)
     expect(utils.formatUnits(price, 18)).toEqual('4.0')// 2 rif per year
   })
+
   test('commitToRegister and canReveal', async () => {
     const label = 'domain-to-test-commitment'
     const { provider, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
@@ -80,10 +83,13 @@ describe('rsk registrar', () => {
 
     const { makeCommitmentTransaction, secret, canReveal } = await rskRegistrar.commitToRegister(label, owner)
     const makeCommitmentTransactionReceipt = await makeCommitmentTransaction.wait()
-    expect(makeCommitmentTransactionReceipt.status).toEqual(successfulTransaction)
+
+    expect(makeCommitmentTransactionReceipt.status).toEqual(1)
+
     const hash = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
     expect(await fifsAddrRegistrarContract.canReveal(hash)).toEqual(false)
     expect(await canReveal()).toEqual(false)
+
     await provider.send('evm_increaseTime', [1001])
     await provider.send('evm_mine', [])
     expect(await fifsAddrRegistrarContract.canReveal(hash)).toEqual(true)
@@ -113,7 +119,7 @@ describe('rsk registrar', () => {
     )
 
     const registerReceipt = await registerTx.wait()
-    expect(registerReceipt.status).toEqual(successfulTransaction)
+    expect(registerReceipt.status).toEqual(1)
     const domainOwner = await rskOwnerContract.ownerOf(hashLabel(label))
     expect(domainOwner).toEqual(owner)
   })
