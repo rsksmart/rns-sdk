@@ -5,7 +5,8 @@ module.exports = {
     'jest/globals': true
   },
   extends: [
-    'standard'
+    'standard',
+    'plugin:@typescript-eslint/recommended'
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -17,5 +18,12 @@ module.exports = {
     'jest'
   ],
   rules: {
+    '@typescript-eslint/type-annotation-spacing': [
+      'error',
+      {
+        before: false,
+        after: true
+      }
+    ]
   }
 }

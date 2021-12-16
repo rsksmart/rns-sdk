@@ -1,17 +1,50 @@
+import { BigNumber } from 'ethers'
 import RNSResolver from '@rsksmart/rns-resolver.js'
 import 'isomorphic-fetch'
 
-import { RNS } from '../src'
-import { rpcUrl, deployRNSFactory, sendAndWait } from './util'
+import { RNS, AddrResolver, RSKRegistrar } from '../src'
+import { rpcUrl, deployRskRegistrar, sendAndWait } from './util'
 import { TEST_ADDRESS } from './testCase'
 
-const deployRNS = deployRNSFactory('taringa', 'user1')
-
 test('e2e', async () => {
-  const { taringaOwner, rnsRegistryContract } = await deployRNS()
-  const taringaOwnerAddress = await taringaOwner.getAddress()
+  const { provider, testAccount, rnsRegistryContract, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract } = await deployRskRegistrar()
+  const testAccountAddress = await testAccount.getAddress()
 
-  const rnsSDK = new RNS(rnsRegistryContract.address, taringaOwner)
+  const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
+  const rns = new RNS(rnsRegistryContract.address, testAccount)
+  const addrResolver = new AddrResolver(rnsRegistryContract.address, testAccount)
+
+  const label = 'lucachaco'
+
+  expect(await rskRegistrar.available(label)).toBeTruthy()
+
+  const duration = BigNumber.from('1')
+
+  const price = await rskRegistrar.price(label, duration)
+
+  const { makeCommitmentTransaction, secret, canReveal } = await rskRegistrar.commitToRegister(label, testAccountAddress)
+
+  await makeCommitmentTransaction.wait()
+
+  await provider.send('evm_increaseTime', [1001])
+  await provider.send('evm_mine', [])
+
+  const commitmentReady = await canReveal()
+  expect(commitmentReady).toEqual(true)
+
+  const registerTx = await rskRegistrar.register(
+    label,
+    testAccountAddress,
+    secret,
+    duration,
+    price
+  )
+
+  await registerTx.wait()
+
+  await sendAndWait(rns.setSubdomainOwner('lucachaco.rsk', 'user1', testAccountAddress))
+  await sendAndWait(addrResolver.setAddr('user1.lucachaco.rsk', TEST_ADDRESS))
+
   const rnsResolver = new RNSResolver({
     registryAddress: rnsRegistryContract.address,
     rpcUrl,
@@ -19,9 +52,6 @@ test('e2e', async () => {
     defaultCoinType: 30
   })
 
-  await sendAndWait(rnsSDK.setSubdomainOwner('taringa.rsk', 'user1', taringaOwnerAddress))
-  await sendAndWait(rnsSDK.setAddr('user1.taringa.rsk', TEST_ADDRESS))
-
-  const addr = await rnsResolver.addr('user1.taringa.rsk')
+  const addr = await rnsResolver.addr('user1.lucachaco.rsk')
   expect(addr).toEqual(TEST_ADDRESS.toLowerCase())
 })
