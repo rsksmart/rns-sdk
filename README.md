@@ -9,18 +9,16 @@
   <a href="https://github.com/rsksmart/rns-sdk/actions/workflows/ci.yml" alt="ci">
     <img src="https://github.com/rsksmart/rns-sdk/actions/workflows/ci.yml/badge.svg" alt="ci" />
   </a>
-  <!--<a href="https://developers.rsk.co/rif/templates/">
-    <img src="https://img.shields.io/badge/-docs-brightgreen" alt="docs" />
-  </a>-->
+  <a href="https://github.com/rsksmart/rns-sdk/actions/workflows/publish.yml" alt="ci">
+    <img src="https://github.com/rsksmart/rns-sdk/actions/workflows/publish.yml/badge.svg" alt="ci" />
+  </a>
+  <br />
   <a href="https://lgtm.com/projects/g/rsksmart/rns-sdk/context:javascript">
     <img src="https://img.shields.io/lgtm/grade/javascript/github/rsksmart/rns-sdk" />
   </a>
-  <a href='https://coveralls.io/github/rsksmart/rns-sdk?branch=main'>
-    <img src='https://coveralls.io/repos/github/rsksmart/rns-sdk/badge.svg?branch=main' alt='Coverage Status' />
+  <a href='https://coveralls.io/github/rsksmart/rns-sdk'>
+    <img src='https://coveralls.io/repos/github/rsksmart/rns-sdk/badge.svg' alt='Coverage Status' />
   </a>
-  <!--<a href="https://hits.seeyoufarm.com">
-    <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Frsksmart%2Frif-web-sdk-template&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false"/>
-  </a>-->
   <a href="https://badge.fury.io/js/%40rsksmart%2Frns-sdk">
     <img src="https://badge.fury.io/js/%40rsksmart%2Frns-sdk.svg" alt="npm" />
   </a>
@@ -28,18 +26,24 @@
 
 ## Features
 
+- .rsk domains:
+  - availability and prices
+  - registrations
+
 - Manage domains:
   - Set subdomain owner
+  - Get/set domain owner
+  - Get/set domain resolver
 
-- Manage resolver:
-  - Set and get `addr`
+- Manage resolution:
+  - Get/set `addr` resolution
 
 ## Usage
 
-The library supports 2 modules:
-- .rsk domains registrations
-- RNS domains admin
-- Domain address resolution
+The library supports 3 modules:
+- .rsk domains registrations using `RSKRegistrar`
+- RNS domains admin using `RNS`
+- Domain address resolution using `AddrResolver`
 
 You will need to use this addresses to initialize the library:
 
@@ -61,8 +65,7 @@ import { Signer } from 'ethers'
 import { RSKRegistrar } from '@rsksmart/rns-sdk'
 
 let signer: Signer
-const rns = new RNS(registryAddress, signer)
-const rskRegistrar = new RSKRegistrar(rskOwnerAddress, fifsAddrRegistrarAddress, rifTokenAddress, testAccount)
+const rskRegistrar = new RSKRegistrar(rskOwnerAddress, fifsAddrRegistrarAddress, rifTokenAddress, signer)
 ```
 
 Query price and availability
