@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/rns-sdk",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "RNS SDK",
   "main": "dist/bundle.js",
   "files": [
@@ -49,6 +49,7 @@
     "ts-jest": "^26.5.6",
     "ts-loader": "^9.1.2",
     "typescript": "^4.2.4",
+    "webpack": "^5.65.0",
     "webpack-cli": "^4.7.0"
   },
   "dependencies": {
