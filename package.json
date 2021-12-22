@@ -1,8 +1,9 @@
 {
   "name": "@rsksmart/rns-sdk",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "RNS SDK",
   "main": "dist/bundle.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -12,7 +13,8 @@
     "test:coverage": "npx jest --coverage",
     "lint": "npx eslint . src/ test/ --ext .js,.ts",
     "lint:fix": "npx eslint . src/ test/ --ext .js,.ts --fix",
-    "build": "npx webpack"
+    "build": "npx webpack",
+    "build:watch": "npx webpack --watch"
   },
   "repository": {
     "type": "git",
