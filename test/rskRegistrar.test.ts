@@ -48,14 +48,14 @@ describe('rsk registrar', () => {
 
     expect(makeCommitmentTransactionReceipt.status).toEqual(1)
 
-    const hash2 = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
-    expect(await fifsAddrRegistrarContract.canReveal(hash2)).toEqual(false)
+    const makeCommitmentHash = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
+    expect(await fifsAddrRegistrarContract.canReveal(makeCommitmentHash)).toEqual(false)
     expect(await canReveal()).toEqual(false)
     expect(await myCanReveal()).toEqual(false)
 
     await provider.send('evm_increaseTime', [1001])
     await provider.send('evm_mine', [])
-    expect(await fifsAddrRegistrarContract.canReveal(hash2)).toEqual(true)
+    expect(await fifsAddrRegistrarContract.canReveal(makeCommitmentHash)).toEqual(true)
     expect(await canReveal()).toEqual(true)
     expect(await myCanReveal()).toEqual(true)
   })
