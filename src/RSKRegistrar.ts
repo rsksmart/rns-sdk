@@ -43,12 +43,16 @@ export class RSKRegistrar {
       return this.fifsAddrRegistrar.price(label, constants.Zero, duration)
     }
 
-    async commitToRegister (label: string, owner: string): Promise<{ secret: string, makeCommitmentTransaction: ContractTransaction, canReveal: ()=> Promise<boolean> }> {
+    async commitToRegister (label: string, owner: string): Promise<{ secret: string, makeCommitmentTransaction: ContractTransaction, canReveal: ()=> Promise<boolean>, hash: string }> {
       const secret = generateSecret()
       const hash = await this.fifsAddrRegistrar.makeCommitment(hashLabel(label), owner, secret)
       const makeCommitmentTransaction = await this.fifsAddrRegistrar.commit(hash)
 
-      return { secret, makeCommitmentTransaction, canReveal: () => this.fifsAddrRegistrar.canReveal(hash) }
+      return { secret, makeCommitmentTransaction, canReveal: () => this.fifsAddrRegistrar.canReveal(hash), hash }
+    }
+
+    async canReveal (hash: string): Promise<{ canReveal: ()=> Promise<boolean> }> {
+        return {  canReveal: () => this.fifsAddrRegistrar.canReveal(hash) }
     }
 
     async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<ContractTransaction> {
