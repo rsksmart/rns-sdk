@@ -42,19 +42,22 @@ describe('rsk registrar', () => {
     const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
     const owner = await testAccount.getAddress()
 
-    const { makeCommitmentTransaction, secret, canReveal } = await rskRegistrar.commitToRegister(label, owner)
+    const { makeCommitmentTransaction, secret, canReveal, hash } = await rskRegistrar.commitToRegister(label, owner)
+    const myCanReveal = await rskRegistrar.canReveal(hash)
     const makeCommitmentTransactionReceipt = await makeCommitmentTransaction.wait()
 
     expect(makeCommitmentTransactionReceipt.status).toEqual(1)
 
-    const hash = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
-    expect(await fifsAddrRegistrarContract.canReveal(hash)).toEqual(false)
+    const makeCommitmentHash = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
+    expect(await fifsAddrRegistrarContract.canReveal(makeCommitmentHash)).toEqual(false)
     expect(await canReveal()).toEqual(false)
+    expect(await myCanReveal()).toEqual(false)
 
     await provider.send('evm_increaseTime', [1001])
     await provider.send('evm_mine', [])
-    expect(await fifsAddrRegistrarContract.canReveal(hash)).toEqual(true)
+    expect(await fifsAddrRegistrarContract.canReveal(makeCommitmentHash)).toEqual(true)
     expect(await canReveal()).toEqual(true)
+    expect(await myCanReveal()).toEqual(true)
   })
   test('register', async () => {
     const label = 'domain-to-test-registration'
