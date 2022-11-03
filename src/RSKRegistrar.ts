@@ -52,7 +52,7 @@ export class RSKRegistrar {
     }
 
     async canReveal (hash: string): Promise<{ canReveal: ()=> Promise<boolean> }> {
-        return {  canReveal: () => this.fifsAddrRegistrar.canReveal(hash) }
+      return { canReveal: () => this.fifsAddrRegistrar.canReveal(hash) }
     }
 
     async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<ContractTransaction> {
