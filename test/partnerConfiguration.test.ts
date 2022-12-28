@@ -92,4 +92,88 @@ describe('partner configuration', () => {
     const name = 'cheta'
     expect((await partnerConfiguration.getPrice(name, expires, duration)).toString()).toStrictEqual('4000000000000000000')
   })
+
+  describe('set discount', () => {
+    it('should set the discount with signer in constructor', async () => {
+      const {
+        partnerConfigurationContract,
+        owner
+      } = await deployPartnerConfiguration()
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+
+      expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT)
+      await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1))
+      expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT + 1)
+    })
+
+    it('should set the discount with signer in method', async () => {
+      const {
+        partnerConfigurationContract,
+        owner
+      } = await deployPartnerConfiguration()
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+
+      expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT)
+      await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), owner)
+      expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT + 1)
+    })
+
+    it('should throw an error if the signer is not set', async () => {
+      const {
+        partnerConfigurationContract,
+        owner
+      } = await deployPartnerConfiguration()
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+
+      try {
+        await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), owner)
+      } catch (error) {
+        expect(error.toString()).toMatch('Signer is not defined')
+      }
+    })
+
+    it('should throw an error if the signer is not the owner', async () => {
+      const {
+        partnerConfigurationContract,
+        provider
+      } = await deployPartnerConfiguration()
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const signer = provider.getSigner(1)
+      try {
+        await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), signer)
+      } catch (error) {
+        expect(error.toString()).toContain('Ownable: caller is not the owner')
+      }
+    })
+
+    it('should set the discount with correct signer in method', async () => {
+      const {
+        partnerConfigurationContract,
+        owner,
+        provider
+      } = await deployPartnerConfiguration()
+
+      const signer = provider.getSigner(1)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+
+      expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT)
+      await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), owner)
+      expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT + 1)
+    })
+
+    it('should throw an error if the owner is set in the constructor but the wrong signer is passed to the method', async () => {
+      const {
+        partnerConfigurationContract,
+        provider,
+        owner
+      } = await deployPartnerConfiguration()
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const signer = provider.getSigner(1)
+      try {
+        await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), signer)
+      } catch (error) {
+        expect(error.toString()).toContain('Ownable: caller is not the owner')
+      }
+    })
+  })
 })
