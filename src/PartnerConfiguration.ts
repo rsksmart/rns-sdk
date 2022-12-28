@@ -96,12 +96,12 @@ export class PartnerConfiguration {
     await (await this.partnerConfiguration.connect(_signer).setUnicodeSupport(unicodeSupport)).wait()
   }
 
-  async setMinCommitmentAge (minCommitmentAge: number, signer?: Signer): Promise<void> {
+  async setMinCommitmentAge (minCommitmentAge: BigNumber, signer?: Signer): Promise<void> {
     const _signer = this.getSigner(signer)
     await (await this.partnerConfiguration.connect(_signer).setMinCommitmentAge(minCommitmentAge))
   }
 
-  async setFeePercentage (feePercentage: number, signer?: Signer): Promise<void> {
+  async setFeePercentage (feePercentage: BigNumber, signer?: Signer): Promise<void> {
     const _signer = this.getSigner(signer)
     await (await this.partnerConfiguration.connect(_signer).setFeePercentage(feePercentage)).wait()
   }
