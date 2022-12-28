@@ -1,4 +1,4 @@
-import { PartnerConfiguration } from '../src/PartnerConfiguration'
+import { PartnerConfiguration } from '../src'
 import {
   DEFAULT_DISCOUNT,
   DEFAULT_FEE_PERCENTAGE,

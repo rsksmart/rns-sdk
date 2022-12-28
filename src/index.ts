@@ -1,4 +1,5 @@
 export { RNS } from './RNS'
 export { AddrResolver } from './AddrResolver'
 export { RSKRegistrar } from './RSKRegistrar'
+export { PartnerConfiguration } from './PartnerConfiguration'
 export * from './hash'
