@@ -1,4 +1,4 @@
-import { Signer, Contract, BigNumber } from 'ethers'
+import { Signer, Contract, BigNumber, providers } from 'ethers'
 
 const partnerConfigurationInterface = [
   'function getMinLength() external view returns (uint256)',
@@ -22,15 +22,16 @@ const partnerConfigurationInterface = [
 ]
 
 export class PartnerConfiguration {
-  partnerConfiguration: Contract
-  signer?: Signer
+  private readonly partnerConfiguration: Contract
 
-  constructor (partnerConfigurationAddress: string, signer?: Signer) {
-    this.partnerConfiguration = new Contract(partnerConfigurationAddress, partnerConfigurationInterface)
+  constructor (private readonly partnerConfigurationAddress: string, private readonly signer?: Signer, private readonly provider: string = 'http://localhost:8545') {
+    this.partnerConfiguration = new Contract(partnerConfigurationAddress, partnerConfigurationInterface, new providers.JsonRpcProvider(provider))
     this.signer = signer
   }
 
-  getMinLength (): Promise<BigNumber> {
+  getPartnerConfiguration (): Contract { return this.partnerConfiguration }
+
+  async getMinLength (): Promise<BigNumber> {
     return this.partnerConfiguration.getMinLength()
   }
 
@@ -110,11 +111,7 @@ export class PartnerConfiguration {
     await (await this.partnerConfiguration.connect(_signer).setMinDuration(minDuration)).wait()
   }
 
-  setSigner (signer: Signer): void {
-    this.signer = signer
-  }
-
-  private getSigner (signer?: Signer): Signer {
+  getSigner (signer?: Signer): Signer {
     const _signer = signer || this.signer
 
     if (!_signer) {

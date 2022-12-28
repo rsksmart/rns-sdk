@@ -1,4 +1,14 @@
-import { providers, ContractFactory, constants, ContractTransaction, BigNumber, utils, Contract, Signer, ContractReceipt } from 'ethers'
+import {
+  providers,
+  ContractFactory,
+  constants,
+  ContractTransaction,
+  BigNumber,
+  utils,
+  Contract,
+  Signer,
+  ContractReceipt
+} from 'ethers'
 
 import RNSRegistryData from '@rsksmart/rns-registry/RNSRegistryData.json'
 import RNSResolverData from '@rsksmart/rns-resolver/AddrResolverData.json'
@@ -9,16 +19,18 @@ import RSKOwnerData from './rskregistrar/rskOwner.json'
 import NamePriceData from './rskregistrar/namePrice.json'
 import BytesUtilsData from './rskregistrar/bytesUtils.json'
 import FIFSAddrRegistrarData from './rskregistrar/fifsAddrRegistrar.json'
+import PartnerConfigurationData from './rskregistrar/partnerConfiguration.json'
 
-import { hashDomain, hashLabel } from '../src/hash'
+import { hashDomain, hashLabel, RSKRegistrar } from '../src'
 import { generateSecret } from '../src/random'
-import { RSKRegistrar } from '../src/RSKRegistrar'
 
 export const sendAndWait = (txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> => txPromise.then(tx => tx.wait())
 
 export const rskLabel = 'rsk'
 
 export const rpcUrl = 'http://localhost:8545'
+
+
 
 const deployRNSRegistryAndResolver = async () => {
   const provider = new providers.JsonRpcProvider(rpcUrl)
@@ -40,7 +52,13 @@ const deployRNSRegistryAndResolver = async () => {
 
   const rnsOwnerAddress = await rnsOwner.getAddress()
 
-  return { provider, rnsOwner, rnsOwnerAddress, rnsRegistryContract, addrResolverContract }
+  return {
+    provider,
+    rnsOwner,
+    rnsOwnerAddress,
+    rnsRegistryContract,
+    addrResolverContract
+  }
 }
 
 export const deployRNSFactory = (domainLabel: string, subdomainLabel: string): ()=> Promise<{
@@ -50,7 +68,12 @@ export const deployRNSFactory = (domainLabel: string, subdomainLabel: string): (
   registerSubdomain: ()=> Promise<void>
 }> => async () => {
   // connect to test network
-  const { provider, rnsOwnerAddress, rnsRegistryContract, addrResolverContract } = await deployRNSRegistryAndResolver()
+  const {
+    provider,
+    rnsOwnerAddress,
+    rnsRegistryContract,
+    addrResolverContract
+  } = await deployRNSRegistryAndResolver()
 
   const taringaOwner = provider.getSigner(1)
 
@@ -86,7 +109,13 @@ export const deployRskRegistrar = async (): Promise<{
   fifsAddrRegistrarContract: Contract,
   testAccount: Signer
 }> => {
-  const { provider, rnsOwner, rnsOwnerAddress, rnsRegistryContract, addrResolverContract } = await deployRNSRegistryAndResolver()
+  const {
+    provider,
+    rnsOwner,
+    rnsOwnerAddress,
+    rnsRegistryContract,
+    addrResolverContract
+  } = await deployRNSRegistryAndResolver()
 
   const rifTokenFactory = new ContractFactory(ERC677Data.abi, ERC677Data.bytecode, rnsOwner)
   const rifTokenContract = await rifTokenFactory.deploy(
@@ -135,7 +164,15 @@ export const deployRskRegistrar = async (): Promise<{
 
   await sendAndWait(rifTokenContract.transfer(await testAccount.getAddress(), toWei('100')))
 
-  return { provider, rnsRegistryContract, addrResolverContract, rskOwnerContract, rifTokenContract, fifsAddrRegistrarContract, testAccount }
+  return {
+    provider,
+    rnsRegistryContract,
+    addrResolverContract,
+    rskOwnerContract,
+    rifTokenContract,
+    fifsAddrRegistrarContract,
+    testAccount
+  }
 }
 
 export const registerDomain = async (label: string, provider: providers.JsonRpcProvider, rskOwnerContract: Contract, fifsAddrRegistrarContract: Contract, rifTokenContract: Contract, testAccount: Signer): Promise<void> => {
@@ -163,4 +200,41 @@ export const registerDomain = async (label: string, provider: providers.JsonRpcP
 
   const tx = await rifTokenContract.transferAndCall(fifsAddrRegistrarContract.address, price, data)
   await tx.wait()
+}
+
+
+export const DEFAULT_MIN_LENGTH = 3
+export const DEFAULT_MAX_LENGTH = 7
+export const DEFAULT_MIN_DURATION = 1
+export const DEFAULT_MAX_DURATION = 2
+export const DEFAULT_MIN_COMMITMENT_AGE = 0
+export const DEFAULT_DISCOUNT = 4
+export const DEFAULT_IS_UNICODE_SUPPORTED = false
+export const DEFAULT_FEE_PERCENTAGE = 5
+export const deployPartnerConfiguration = async (): Promise<{
+  provider: providers.JsonRpcProvider, owner: providers.JsonRpcSigner, partnerConfigurationFactory: ContractFactory, partnerConfigurationContract: Contract,
+}> => {
+
+
+  const provider = new providers.JsonRpcProvider(rpcUrl)
+  const owner = provider.getSigner(0)
+  const partnerConfigurationFactory = new ContractFactory(PartnerConfigurationData.abi, PartnerConfigurationData.bytecode, owner)
+  const partnerConfigurationContract = await partnerConfigurationFactory.deploy(
+    DEFAULT_MIN_LENGTH,
+    DEFAULT_MAX_LENGTH,
+    DEFAULT_IS_UNICODE_SUPPORTED,
+    DEFAULT_MIN_DURATION,
+    DEFAULT_MAX_DURATION,
+    DEFAULT_FEE_PERCENTAGE,
+    DEFAULT_DISCOUNT,
+    DEFAULT_MIN_COMMITMENT_AGE
+  )
+  await partnerConfigurationContract.deployTransaction.wait()
+
+  return {
+    provider,
+    owner,
+    partnerConfigurationFactory,
+    partnerConfigurationContract
+  }
 }
