@@ -30,6 +30,9 @@ describe('partner configuration', () => {
 
     partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
     expect(await partnerConfiguration.getSigner(owner).getAddress()).toEqual(await owner.getAddress())
+
+    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    expect(partnerConfiguration.getProvider()).toEqual('http://localhost:8545')
   })
 
   test('get min length', async () => {

@@ -30,6 +30,7 @@ export class PartnerConfiguration {
   }
 
   getPartnerConfiguration (): Contract { return this.partnerConfiguration }
+  getProvider (): string { return this.provider }
 
   async getMinLength (): Promise<BigNumber> {
     return this.partnerConfiguration.getMinLength()
