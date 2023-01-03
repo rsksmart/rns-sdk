@@ -33,6 +33,9 @@ describe('partner configuration', () => {
 
     partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
     expect(partnerConfiguration.getProvider()).toEqual('http://localhost:8545')
+
+    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, undefined, 'https://public-node.testnet.rsk.co')
+    expect(partnerConfiguration.getProvider()).toEqual('https://public-node.testnet.rsk.co')
   })
 
   test('get min length', async () => {
