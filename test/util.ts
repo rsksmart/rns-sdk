@@ -30,8 +30,6 @@ export const rskLabel = 'rsk'
 
 export const rpcUrl = 'http://localhost:8545'
 
-
-
 const deployRNSRegistryAndResolver = async () => {
   const provider = new providers.JsonRpcProvider(rpcUrl)
 
@@ -202,7 +200,6 @@ export const registerDomain = async (label: string, provider: providers.JsonRpcP
   await tx.wait()
 }
 
-
 export const DEFAULT_MIN_LENGTH = 3
 export const DEFAULT_MAX_LENGTH = 7
 export const DEFAULT_MIN_DURATION = 1
@@ -214,8 +211,6 @@ export const DEFAULT_FEE_PERCENTAGE = 5
 export const deployPartnerConfiguration = async (): Promise<{
   provider: providers.JsonRpcProvider, owner: providers.JsonRpcSigner, partnerConfigurationFactory: ContractFactory, partnerConfigurationContract: Contract,
 }> => {
-
-
   const provider = new providers.JsonRpcProvider(rpcUrl)
   const owner = provider.getSigner(0)
   const partnerConfigurationFactory = new ContractFactory(PartnerConfigurationData.abi, PartnerConfigurationData.bytecode, owner)
