@@ -1,6 +1,7 @@
 import { Signer, Contract, BigNumber, utils, constants, providers } from 'ethers'
 import { hashLabel } from './hash'
 import { generateSecret } from './random'
+import { PartnerConfiguration } from './PartnerConfiguration'
 
 const rskOwnerInterface = [
   'function available(uint256 tokenId) public view returns(bool)',
@@ -29,8 +30,9 @@ export class RSKPartnerRegistrar {
     private readonly partnerAddress: string,
     private readonly rskOwnerAddress: string,
     private readonly rifTokenAddress: string,
-    private readonly signer?: Signer,
-    private readonly provider: string = 'http://localhost:8545') {
+    private readonly provider: string,
+    private readonly signer?: Signer
+  ) {
     const jsonRpcProvider = new providers.JsonRpcProvider(provider)
     this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, jsonRpcProvider)
     this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, jsonRpcProvider)
@@ -89,7 +91,7 @@ export class RSKPartnerRegistrar {
     return this.partnerRegistrar.canReveal(hash)
   }
 
-  async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string, signer?: Signer): Promise<boolean> {
+  private async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string, signer?: Signer): Promise<boolean> {
     /* Encoding:
       | signature  |  4 bytes      - offset  0
       | owner      | 20 bytes      - offset  4
@@ -117,29 +119,41 @@ export class RSKPartnerRegistrar {
     return transaction.wait()
   }
 
-  async commitAndRegister (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string, signer?: Signer): Promise<boolean> {
-    const { hash } = await this.commit(label, owner)
-
-    let canReveal = false
-
-    const infiniteIterator = function * () {
-      while (true) {
-        yield
-      }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for (const _ of infiniteIterator) { // keep checking until canReveal is true
-      if (canReveal) {
-        break
-      }
-
-      canReveal = await this.canReveal(hash)
-    }
-
+  async commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string, signer?: Signer): Promise<boolean> {
     const _signer = this.getSigner(signer)
+
+    let secret: string | undefined
+    let hash: string | undefined
+
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, this.provider)
+
+    // run commitment if commitment is required
+    if (!(await partnerConfiguration.getMinCommitmentAge()).gt(0)) {
+      secret = generateSecret()
+    } else {
+      const commitResult = await this.commit(label, owner)
+      secret = commitResult.secret
+      hash = commitResult.hash
+
+      let canReveal = false
+
+      const infiniteIterator = function * () {
+        while (true) {
+          yield
+        }
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for (const _ of infiniteIterator) { // keep checking until canReveal is true
+        if (canReveal) {
+          break
+        }
+
+        canReveal = await this.canReveal(hash)
+      }
+    }
 
     return this.register(label, owner, secret, duration, amount, addr, _signer)
   }
