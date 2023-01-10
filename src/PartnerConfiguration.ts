@@ -24,7 +24,7 @@ const partnerConfigurationInterface = [
 export class PartnerConfiguration {
   private readonly partnerConfiguration: Contract
 
-  constructor (private readonly partnerConfigurationAddress: string, private readonly signer?: Signer, private readonly provider: string = 'http://localhost:8545') {
+  constructor (private readonly partnerConfigurationAddress: string, private readonly provider: string, private readonly signer?: Signer) {
     this.partnerConfiguration = new Contract(partnerConfigurationAddress, partnerConfigurationInterface, new providers.JsonRpcProvider(provider))
     this.signer = signer
   }

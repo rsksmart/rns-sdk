@@ -9,6 +9,8 @@ import {
 } from './util'
 import { BigNumber } from 'ethers'
 
+const NODE = 'http://localhost:8545'
+
 describe('partner configuration', () => {
   test('constructor', async () => {
     const {
@@ -16,11 +18,11 @@ describe('partner configuration', () => {
       owner
     } = await deployPartnerConfiguration()
 
-    let partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+    let partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
     expect(await partnerConfiguration.getSigner().getAddress()).toEqual(await owner.getAddress())
     expect(await partnerConfiguration.getPartnerConfiguration().address).toEqual(await partnerConfigurationContract.address)
 
-    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
     try {
       partnerConfiguration.getSigner()
     } catch (error) {
@@ -28,75 +30,72 @@ describe('partner configuration', () => {
     }
     expect(await partnerConfiguration.getPartnerConfiguration().address).toEqual(await partnerConfigurationContract.address)
 
-    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
     expect(await partnerConfiguration.getSigner(owner).getAddress()).toEqual(await owner.getAddress())
 
-    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
-    expect(partnerConfiguration.getProvider()).toEqual('http://localhost:8545')
-
-    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, undefined, 'https://public-node.testnet.rsk.co')
-    expect(partnerConfiguration.getProvider()).toEqual('https://public-node.testnet.rsk.co')
+    partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
+    expect(partnerConfiguration.getProvider()).toEqual(NODE)
   })
 
   test('get min length', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     expect((await partnerConfiguration.getMinLength()).toNumber()).toEqual(DEFAULT_MIN_LENGTH)
   })
 
   test('get max length', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     expect((await partnerConfiguration.getMaxLength()).toNumber()).toEqual(DEFAULT_MAX_LENGTH)
   })
 
   test('get unicode support', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     expect(await partnerConfiguration.getUnicodeSupport()).toBe(DEFAULT_IS_UNICODE_SUPPORTED)
   })
 
   test('get min duration', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     expect((await partnerConfiguration.getMinDuration()).toNumber()).toEqual(DEFAULT_MIN_DURATION)
   })
 
   test('get max duration', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     expect((await partnerConfiguration.getMaxDuration()).toNumber()).toEqual(DEFAULT_MAX_DURATION)
   })
 
   test('get min commitment age', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     expect((await partnerConfiguration.getMinCommitmentAge()).toNumber()).toEqual(DEFAULT_MIN_COMMITMENT_AGE)
   })
 
   test('get fee percentage', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     expect((await partnerConfiguration.getFeePercentage()).toNumber()).toEqual(DEFAULT_FEE_PERCENTAGE)
   })
 
   test('get discount', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT)
   })
 
   test('get price', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     const expires = BigNumber.from(1)
     const duration = BigNumber.from(2)
@@ -106,7 +105,7 @@ describe('partner configuration', () => {
 
   test('validate name', async () => {
     const { partnerConfigurationContract } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
     const duration = BigNumber.from(2)
     const name = 'cheta'
@@ -124,7 +123,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
 
       expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT)
       await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1))
@@ -136,7 +135,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT)
       await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), owner)
@@ -148,7 +147,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       try {
         await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), owner)
@@ -162,7 +161,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         provider
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), signer)
@@ -179,7 +178,7 @@ describe('partner configuration', () => {
       } = await deployPartnerConfiguration()
 
       const signer = provider.getSigner(1)
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, signer)
 
       expect((await partnerConfiguration.getDiscount()).toNumber()).toEqual(DEFAULT_DISCOUNT)
       await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), owner)
@@ -192,7 +191,7 @@ describe('partner configuration', () => {
         provider,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setDiscount(BigNumber.from(DEFAULT_DISCOUNT + 1), signer)
@@ -207,7 +206,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
 
       expect((await partnerConfiguration.getMinLength()).toNumber()).toEqual(DEFAULT_MIN_LENGTH)
       await partnerConfiguration.setMinLength(BigNumber.from(DEFAULT_MIN_LENGTH + 1))
@@ -219,7 +218,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       expect((await partnerConfiguration.getMinLength()).toNumber()).toEqual(DEFAULT_MIN_LENGTH)
       await partnerConfiguration.setMinLength(BigNumber.from(DEFAULT_MIN_LENGTH + 1), owner)
@@ -231,7 +230,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       try {
         await partnerConfiguration.setMinLength(BigNumber.from(DEFAULT_MIN_LENGTH + 1), owner)
@@ -245,7 +244,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         provider
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMinLength(BigNumber.from(DEFAULT_MIN_LENGTH + 1), signer)
@@ -262,7 +261,7 @@ describe('partner configuration', () => {
       } = await deployPartnerConfiguration()
 
       const signer = provider.getSigner(1)
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, signer)
 
       expect((await partnerConfiguration.getMinLength()).toNumber()).toEqual(DEFAULT_MIN_LENGTH)
       await partnerConfiguration.setMinLength(BigNumber.from(DEFAULT_MIN_LENGTH + 1), owner)
@@ -275,7 +274,7 @@ describe('partner configuration', () => {
         provider,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMinLength(BigNumber.from(DEFAULT_MIN_LENGTH + 1), signer)
@@ -290,7 +289,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
 
       expect((await partnerConfiguration.getMaxDuration()).toNumber()).toEqual(DEFAULT_MAX_DURATION)
       await partnerConfiguration.setMaxDuration(BigNumber.from(DEFAULT_MAX_DURATION + 1))
@@ -302,7 +301,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       expect((await partnerConfiguration.getMaxDuration()).toNumber()).toEqual(DEFAULT_MAX_DURATION)
       await partnerConfiguration.setMaxDuration(BigNumber.from(DEFAULT_MAX_DURATION + 1), owner)
@@ -314,7 +313,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       try {
         await partnerConfiguration.setMaxDuration(BigNumber.from(DEFAULT_MAX_DURATION + 1), owner)
@@ -328,7 +327,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         provider
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMaxDuration(BigNumber.from(DEFAULT_MAX_DURATION + 1), signer)
@@ -345,7 +344,7 @@ describe('partner configuration', () => {
       } = await deployPartnerConfiguration()
 
       const signer = provider.getSigner(1)
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, signer)
 
       expect((await partnerConfiguration.getMaxDuration()).toNumber()).toEqual(DEFAULT_MAX_DURATION)
       await partnerConfiguration.setMaxDuration(BigNumber.from(DEFAULT_MAX_DURATION + 1), owner)
@@ -358,7 +357,7 @@ describe('partner configuration', () => {
         provider,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMaxDuration(BigNumber.from(DEFAULT_MAX_DURATION + 1), signer)
@@ -373,7 +372,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
 
       expect((await partnerConfiguration.getMaxLength()).toNumber()).toEqual(DEFAULT_MAX_LENGTH)
       await partnerConfiguration.setMaxLength(BigNumber.from(DEFAULT_MAX_LENGTH + 1))
@@ -385,7 +384,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       expect((await partnerConfiguration.getMaxLength()).toNumber()).toEqual(DEFAULT_MAX_LENGTH)
       await partnerConfiguration.setMaxLength(BigNumber.from(DEFAULT_MAX_LENGTH + 1), owner)
@@ -397,7 +396,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       try {
         await partnerConfiguration.setMaxLength(BigNumber.from(DEFAULT_MAX_LENGTH + 1), owner)
@@ -411,7 +410,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         provider
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMaxLength(BigNumber.from(DEFAULT_MAX_LENGTH + 1), signer)
@@ -428,7 +427,7 @@ describe('partner configuration', () => {
       } = await deployPartnerConfiguration()
 
       const signer = provider.getSigner(1)
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, signer)
 
       expect((await partnerConfiguration.getMaxLength()).toNumber()).toEqual(DEFAULT_MAX_LENGTH)
       await partnerConfiguration.setMaxLength(BigNumber.from(DEFAULT_MAX_LENGTH + 1), owner)
@@ -441,7 +440,7 @@ describe('partner configuration', () => {
         provider,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMaxLength(BigNumber.from(DEFAULT_MAX_LENGTH + 1), signer)
@@ -456,7 +455,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
 
       expect((await partnerConfiguration.getMinCommitmentAge()).toNumber()).toEqual(DEFAULT_MIN_COMMITMENT_AGE)
       await partnerConfiguration.setMinCommitmentAge(BigNumber.from(DEFAULT_MIN_COMMITMENT_AGE + 1))
@@ -468,7 +467,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       expect((await partnerConfiguration.getMinCommitmentAge()).toNumber()).toEqual(DEFAULT_MIN_COMMITMENT_AGE)
       await partnerConfiguration.setMinCommitmentAge(BigNumber.from(DEFAULT_MIN_COMMITMENT_AGE + 1), owner)
@@ -480,7 +479,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       try {
         await partnerConfiguration.setMinCommitmentAge(BigNumber.from(DEFAULT_MIN_COMMITMENT_AGE + 1), owner)
@@ -494,7 +493,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         provider
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMinCommitmentAge(BigNumber.from(DEFAULT_MIN_COMMITMENT_AGE + 1), signer)
@@ -511,7 +510,7 @@ describe('partner configuration', () => {
       } = await deployPartnerConfiguration()
 
       const signer = provider.getSigner(1)
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, signer)
 
       expect((await partnerConfiguration.getMinCommitmentAge()).toNumber()).toEqual(DEFAULT_MIN_COMMITMENT_AGE)
       await partnerConfiguration.setMinCommitmentAge(BigNumber.from(DEFAULT_MIN_COMMITMENT_AGE + 1), owner)
@@ -524,7 +523,7 @@ describe('partner configuration', () => {
         provider,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMinCommitmentAge(BigNumber.from(DEFAULT_MIN_COMMITMENT_AGE + 1), signer)
@@ -539,7 +538,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
 
       expect((await partnerConfiguration.getFeePercentage()).toNumber()).toEqual(DEFAULT_FEE_PERCENTAGE)
       await partnerConfiguration.setFeePercentage(BigNumber.from(DEFAULT_FEE_PERCENTAGE + 1))
@@ -551,7 +550,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       expect((await partnerConfiguration.getFeePercentage()).toNumber()).toEqual(DEFAULT_FEE_PERCENTAGE)
       await partnerConfiguration.setFeePercentage(BigNumber.from(DEFAULT_FEE_PERCENTAGE + 1), owner)
@@ -563,7 +562,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       try {
         await partnerConfiguration.setFeePercentage(BigNumber.from(DEFAULT_FEE_PERCENTAGE + 1), owner)
@@ -577,7 +576,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         provider
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setFeePercentage(BigNumber.from(DEFAULT_FEE_PERCENTAGE + 1), signer)
@@ -594,7 +593,7 @@ describe('partner configuration', () => {
       } = await deployPartnerConfiguration()
 
       const signer = provider.getSigner(1)
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, signer)
 
       expect((await partnerConfiguration.getFeePercentage()).toNumber()).toEqual(DEFAULT_FEE_PERCENTAGE)
       await partnerConfiguration.setFeePercentage(BigNumber.from(DEFAULT_FEE_PERCENTAGE + 1), owner)
@@ -607,7 +606,7 @@ describe('partner configuration', () => {
         provider,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setFeePercentage(BigNumber.from(DEFAULT_FEE_PERCENTAGE + 1), signer)
@@ -622,7 +621,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
 
       expect((await partnerConfiguration.getMinDuration()).toNumber()).toEqual(DEFAULT_MIN_DURATION)
       await partnerConfiguration.setMinDuration(BigNumber.from(DEFAULT_MIN_DURATION + 1))
@@ -634,7 +633,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       expect((await partnerConfiguration.getMinDuration()).toNumber()).toEqual(DEFAULT_MIN_DURATION)
       await partnerConfiguration.setMinDuration(BigNumber.from(DEFAULT_MIN_DURATION + 1), owner)
@@ -646,7 +645,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       try {
         await partnerConfiguration.setMinDuration(BigNumber.from(DEFAULT_MIN_DURATION + 1), owner)
@@ -660,7 +659,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         provider
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMinDuration(BigNumber.from(DEFAULT_MIN_DURATION + 1), signer)
@@ -677,7 +676,7 @@ describe('partner configuration', () => {
       } = await deployPartnerConfiguration()
 
       const signer = provider.getSigner(1)
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, signer)
 
       expect((await partnerConfiguration.getMinDuration()).toNumber()).toEqual(DEFAULT_MIN_DURATION)
       await partnerConfiguration.setMinDuration(BigNumber.from(DEFAULT_MIN_DURATION + 1), owner)
@@ -690,7 +689,7 @@ describe('partner configuration', () => {
         provider,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setMinDuration(BigNumber.from(DEFAULT_MIN_DURATION + 1), signer)
@@ -705,7 +704,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
 
       expect((await partnerConfiguration.getUnicodeSupport())).toEqual(DEFAULT_IS_UNICODE_SUPPORTED)
       await partnerConfiguration.setUnicodeSupport((!DEFAULT_IS_UNICODE_SUPPORTED))
@@ -717,7 +716,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       expect((await partnerConfiguration.getUnicodeSupport())).toEqual(DEFAULT_IS_UNICODE_SUPPORTED)
       await partnerConfiguration.setUnicodeSupport((!DEFAULT_IS_UNICODE_SUPPORTED), owner)
@@ -729,7 +728,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
 
       try {
         await partnerConfiguration.setUnicodeSupport((!DEFAULT_IS_UNICODE_SUPPORTED), owner)
@@ -743,7 +742,7 @@ describe('partner configuration', () => {
         partnerConfigurationContract,
         provider
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setUnicodeSupport((!DEFAULT_IS_UNICODE_SUPPORTED), signer)
@@ -760,7 +759,7 @@ describe('partner configuration', () => {
       } = await deployPartnerConfiguration()
 
       const signer = provider.getSigner(1)
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, signer)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, signer)
 
       expect((await partnerConfiguration.getUnicodeSupport())).toEqual(DEFAULT_IS_UNICODE_SUPPORTED)
       await partnerConfiguration.setUnicodeSupport((!DEFAULT_IS_UNICODE_SUPPORTED), owner)
@@ -773,7 +772,7 @@ describe('partner configuration', () => {
         provider,
         owner
       } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
+      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, NODE, owner)
       const signer = provider.getSigner(1)
       try {
         await partnerConfiguration.setUnicodeSupport((!DEFAULT_IS_UNICODE_SUPPORTED), signer)
