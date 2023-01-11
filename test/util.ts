@@ -18,8 +18,12 @@ import TokenRegistrarData from './rskregistrar/tokenRegistrar.json'
 import RSKOwnerData from './rskregistrar/rskOwner.json'
 import NamePriceData from './rskregistrar/namePrice.json'
 import BytesUtilsData from './rskregistrar/bytesUtils.json'
+import StringUtilsData from './rskregistrar/stringUtils.json'
 import FIFSAddrRegistrarData from './rskregistrar/fifsAddrRegistrar.json'
 import PartnerConfigurationData from './rskregistrar/partnerConfiguration.json'
+import PartnerRegistrarData from './rskregistrar/partnerRegistrar.json'
+import PartnerManagerData from './rskregistrar/partnerManager.json'
+import FeeManagerData from './rskregistrar/feeManager.json'
 
 import { hashDomain, hashLabel, RSKRegistrar } from '../src'
 import { generateSecret } from '../src/random'
@@ -204,7 +208,7 @@ export const DEFAULT_MIN_LENGTH = 3
 export const DEFAULT_MAX_LENGTH = 7
 export const DEFAULT_MIN_DURATION = 1
 export const DEFAULT_MAX_DURATION = 2
-export const DEFAULT_MIN_COMMITMENT_AGE = 0
+export const DEFAULT_MIN_COMMITMENT_AGE = 5
 export const DEFAULT_DISCOUNT = 4
 export const DEFAULT_IS_UNICODE_SUPPORTED = false
 export const DEFAULT_FEE_PERCENTAGE = 5
@@ -230,6 +234,117 @@ export const deployPartnerConfiguration = async (): Promise<{
     provider,
     owner,
     partnerConfigurationFactory,
+    partnerConfigurationContract
+  }
+}
+
+export const deployPartnerRegistrar = async (): Promise<{
+  provider: providers.JsonRpcProvider,
+  partnerAccount: providers.JsonRpcSigner,
+  partnerOwnerAccount: providers.JsonRpcSigner,
+  rnsRegistryContract: Contract,
+  rifTokenContract: Contract,
+  addrResolverContract: Contract,
+  partnerRegistrarContract: Contract,
+  partnerManagerContract: Contract,
+  rskOwnerContract: Contract,
+  feeManagerContract: Contract,
+  partnerConfigurationContract: Contract,
+  partnerAccountAddress: string,
+  rnsOwnerAddress: string,
+  rnsOwner: providers.JsonRpcSigner,
+}> => {
+  const {
+    provider,
+    rnsOwner,
+    rnsOwnerAddress,
+    rnsRegistryContract,
+    addrResolverContract
+  } = await deployRNSRegistryAndResolver()
+
+  const rifTokenFactory = new ContractFactory(ERC677Data.abi, ERC677Data.bytecode, rnsOwner)
+  const rifTokenContract = await rifTokenFactory.deploy(
+    rnsOwnerAddress,
+    toWei('1000'),
+    'Testing RIF',
+    'RIF',
+    BigNumber.from('18')
+  )
+  await rifTokenContract.deployTransaction.wait()
+
+  const tokenRegistrarFactory = new ContractFactory(TokenRegistrarData.abi, TokenRegistrarData.bytecode, rnsOwner)
+  const tokenRegistrarContract = await tokenRegistrarFactory.deploy(rnsRegistryContract.address, hashDomain(rskLabel), rifTokenContract.address)
+  await tokenRegistrarContract.deployTransaction.wait()
+
+  const rskOwnerFactory = new ContractFactory(RSKOwnerData.abi, RSKOwnerData.bytecode, rnsOwner)
+  const rskOwnerContract = await rskOwnerFactory.deploy(tokenRegistrarContract.address, rnsRegistryContract.address, hashDomain(rskLabel))
+  await rskOwnerContract.deployTransaction.wait()
+
+  const bytesUtilsFactory = new ContractFactory(BytesUtilsData.abi, BytesUtilsData.bytecode, rnsOwner)
+  const bytesUtilsContract = await bytesUtilsFactory.deploy()
+  await bytesUtilsContract.deployTransaction.wait()
+
+  const stringUtilsFactory = new ContractFactory(StringUtilsData.abi, StringUtilsData.bytecode, rnsOwner)
+  const stringUtilsContract = await stringUtilsFactory.deploy()
+  await stringUtilsContract.deployTransaction.wait()
+
+  const partnerManagerFactory = new ContractFactory(PartnerManagerData.abi, PartnerManagerData.bytecode, rnsOwner)
+  const partnerManagerContract = await partnerManagerFactory.deploy()
+  await partnerManagerContract.deployTransaction.wait()
+
+  const partnerRegistrarFactory = new ContractFactory(PartnerRegistrarData.abi,
+    PartnerRegistrarData
+      .bytecode
+      .replace(/__BytesUtils____________________________/g, bytesUtilsContract.address.slice(2).toLowerCase()) // linking
+      .replace(/__StringUtils____________________________/g, stringUtilsContract.address.slice(2).toLowerCase()), // linking
+    rnsOwner)
+
+  const partnerRegistrarContract = await partnerRegistrarFactory.deploy(
+    rskOwnerContract.address,
+    rifTokenContract.address,
+    partnerManagerContract.address,
+    rnsRegistryContract.address,
+    hashDomain(rskLabel))
+  await partnerRegistrarContract.deployTransaction.wait()
+
+  const feeManagerFactory = new ContractFactory(FeeManagerData.abi, FeeManagerData.bytecode, rnsOwner)
+  const feeManagerContract = await feeManagerFactory.deploy(
+    rifTokenContract.address,
+    partnerRegistrarContract.address,
+    partnerRegistrarContract.address,
+    partnerManagerContract.address,
+    rnsOwnerAddress
+  )
+  await feeManagerContract.deployTransaction.wait()
+
+  const { partnerConfigurationContract } = await deployPartnerConfiguration()
+
+  const partnerAccount = provider.getSigner(3)
+  const partnerOwnerAccount = provider.getSigner(4)
+  const partnerAccountAddress = await partnerAccount.getAddress()
+  const partnerOwnerAccountAddress = await partnerOwnerAccount.getAddress()
+
+  await sendAndWait(partnerRegistrarContract.setFeeManager(feeManagerContract.address))
+  await sendAndWait(partnerManagerContract.addPartner(partnerAccountAddress, partnerOwnerAccountAddress))
+  await sendAndWait(partnerManagerContract.setPartnerConfiguration(partnerAccountAddress, partnerConfigurationContract.address))
+  await sendAndWait(rifTokenContract.transfer(rnsOwnerAddress, toWei('10')))
+  await sendAndWait(rskOwnerContract.addRegistrar(partnerRegistrarContract.address))
+  await sendAndWait(rnsRegistryContract.setSubnodeOwner(constants.HashZero, hashLabel(rskLabel), rskOwnerContract.address))
+
+  return {
+    provider,
+    rnsRegistryContract,
+    addrResolverContract,
+    rskOwnerContract,
+    rifTokenContract,
+    partnerRegistrarContract,
+    partnerManagerContract,
+    partnerAccount,
+    partnerAccountAddress,
+    partnerOwnerAccount,
+    feeManagerContract,
+    rnsOwner,
+    rnsOwnerAddress,
     partnerConfigurationContract
   }
 }
