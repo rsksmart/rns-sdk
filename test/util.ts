@@ -208,11 +208,15 @@ export const DEFAULT_MIN_LENGTH = 3
 export const DEFAULT_MAX_LENGTH = 7
 export const DEFAULT_MIN_DURATION = 1
 export const DEFAULT_MAX_DURATION = 2
-export const DEFAULT_MIN_COMMITMENT_AGE = 5
+export const DEFAULT_MIN_COMMITMENT_AGE = 0
 export const DEFAULT_DISCOUNT = 4
 export const DEFAULT_IS_UNICODE_SUPPORTED = false
 export const DEFAULT_FEE_PERCENTAGE = 5
-export const deployPartnerConfiguration = async (): Promise<{
+export const deployPartnerConfiguration = async ({
+  defaultMinCommitmentAge = DEFAULT_MIN_COMMITMENT_AGE
+}: {
+    defaultMinCommitmentAge?: number
+} = {}): Promise<{
   provider: providers.JsonRpcProvider, owner: providers.JsonRpcSigner, partnerConfigurationFactory: ContractFactory, partnerConfigurationContract: Contract,
 }> => {
   const provider = new providers.JsonRpcProvider(rpcUrl)
@@ -226,7 +230,7 @@ export const deployPartnerConfiguration = async (): Promise<{
     DEFAULT_MAX_DURATION,
     DEFAULT_FEE_PERCENTAGE,
     DEFAULT_DISCOUNT,
-    DEFAULT_MIN_COMMITMENT_AGE
+    defaultMinCommitmentAge
   )
   await partnerConfigurationContract.deployTransaction.wait()
 
@@ -238,7 +242,13 @@ export const deployPartnerConfiguration = async (): Promise<{
   }
 }
 
-export const deployPartnerRegistrar = async (): Promise<{
+export const deployPartnerRegistrar = async (
+  {
+    defaultMinCommitmentAge = DEFAULT_MIN_COMMITMENT_AGE
+  }: {
+    defaultMinCommitmentAge?: number
+  } = {}
+): Promise<{
   provider: providers.JsonRpcProvider,
   partnerAccount: providers.JsonRpcSigner,
   partnerOwnerAccount: providers.JsonRpcSigner,
@@ -317,7 +327,9 @@ export const deployPartnerRegistrar = async (): Promise<{
   )
   await feeManagerContract.deployTransaction.wait()
 
-  const { partnerConfigurationContract } = await deployPartnerConfiguration()
+  const { partnerConfigurationContract } = await deployPartnerConfiguration({
+    defaultMinCommitmentAge
+  })
 
   const partnerAccount = provider.getSigner(3)
   const partnerOwnerAccount = provider.getSigner(4)
@@ -347,4 +359,11 @@ export const deployPartnerRegistrar = async (): Promise<{
     rnsOwnerAddress,
     partnerConfigurationContract
   }
+}
+
+const send = (provider: providers.JsonRpcProvider, method: string, params: number[] = []) =>
+  provider.send(method, params)
+export const timeTravel = async (provider: providers.JsonRpcProvider, seconds: number): Promise<void> => {
+  await send(provider, 'evm_increaseTime', [seconds])
+  await send(provider, 'evm_mine')
 }
