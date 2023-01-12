@@ -1,18 +1,16 @@
-import { PartnerRegistrar } from '../src'
+import { PartnerRegistrar, AddrResolver } from '../src'
 import {
-  DEFAULT_MIN_COMMITMENT_AGE,
   deployPartnerRegistrar,
   rpcUrl, timeTravel,
   toWei
 } from './util'
 import { BigNumber, Contract, providers } from 'ethers'
+import { generateSecret } from '../src/random'
 
 function commitAndRegister (partnerRegistrar: PartnerRegistrar, name: string, rnsOwnerAddress: string, partnerConfigurationContract: Contract, rnsOwner: providers.JsonRpcSigner) {
   const commitAndRegistrarPromise = partnerRegistrar.commitAndRegister(name, rnsOwnerAddress, BigNumber.from(2), toWei('4'), partnerConfigurationContract.address, rnsOwnerAddress, rnsOwner)
   setTimeout(async () => {
-    console.time('timeTravel')
     await timeTravel(new providers.JsonRpcProvider(rpcUrl), 20)
-    console.timeEnd('timeTravel')
   }, 500)
   return commitAndRegistrarPromise
 }
@@ -170,43 +168,78 @@ describe('partner registrar', () => {
     }, 3000000)
   })
 
-  test('register', async () => {
-    const defaultMinCommitmentAge = 5
+  describe('register', () => {
+    test('should register a domain', async () => {
+      const defaultMinCommitmentAge = 5
 
-    const {
-      partnerRegistrarContract,
-      partnerAccountAddress,
-      rskOwnerContract,
-      rifTokenContract,
-      rnsOwnerAddress,
-      rnsOwner,
-      provider
-    } = await deployPartnerRegistrar(
-      {
-        defaultMinCommitmentAge
-      }
-    )
-    const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwnerAddress,
+        rnsOwner,
+        provider
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge
+        }
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
-    const name = 'cheta'
-    const duration = BigNumber.from(2)
-    const amount = toWei('4')
+      const name = 'cheta'
+      const duration = BigNumber.from(2)
+      const amount = toWei('4')
 
-    expect((await partnerRegistrar.available(name))).toEqual(true)
+      expect((await partnerRegistrar.available(name))).toEqual(true)
 
-    const {
-      secret,
-      hash
-    } = await partnerRegistrar.commit(name, rnsOwnerAddress, duration, rnsOwner, rnsOwnerAddress)
+      const {
+        secret,
+        hash
+      } = await partnerRegistrar.commit(name, rnsOwnerAddress, duration, rnsOwner, rnsOwnerAddress)
 
-    await timeTravel(provider, defaultMinCommitmentAge)
+      await timeTravel(provider, defaultMinCommitmentAge)
 
-    expect(await partnerRegistrar.canReveal(hash)).toBe(true)
+      expect(await partnerRegistrar.canReveal(hash)).toBe(true)
 
-    await partnerRegistrar.register(name, rnsOwnerAddress, secret, duration, amount, rnsOwnerAddress, rnsOwner)
+      await partnerRegistrar.register(name, rnsOwnerAddress, secret, duration, amount, rnsOwnerAddress, rnsOwner)
 
-    expect((await partnerRegistrar.available(name))).toEqual(false)
-  }, 3000000)
+      expect((await partnerRegistrar.available(name))).toEqual(false)
+    }, 3000000)
+    test('should register a domain if the address to resolve is not passed', async () => {
+      const defaultMinCommitmentAge = 0
+
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwnerAddress,
+        rnsOwner,
+        rnsRegistryContract
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge
+        }
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+
+      const name = 'cheta'
+      const duration = BigNumber.from(2)
+      const amount = toWei('4')
+
+      expect(await partnerRegistrar.available(name)).toEqual(true)
+
+      const secret = generateSecret()
+
+      await partnerRegistrar.register(name, rnsOwnerAddress, secret, duration, amount, undefined, rnsOwner)
+
+      const addrResolver = new AddrResolver(rnsRegistryContract.address, rnsOwner)
+
+      expect((await partnerRegistrar.available(name))).toEqual(false)
+      expect((await addrResolver.addr(name + '.rsk'))).toEqual(rnsOwnerAddress)
+    }, 3000000)
+  })
 
   test('canReveal', async () => {
     const defaultMinCommitmentAge = 5

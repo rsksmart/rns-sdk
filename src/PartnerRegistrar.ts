@@ -116,7 +116,7 @@ export class PartnerRegistrar {
   async commit (label: string, owner: string, duration: BigNumber, signer?: Signer, addr?: string): Promise<{ secret: string, hash: string }> {
     const _signer = this.getSigner(signer)
     const secret = generateSecret()
-    const hash = await this.partnerRegistrar.makeCommitment(hashLabel(label), owner, secret, duration, addr)
+    const hash = await this.partnerRegistrar.makeCommitment(hashLabel(label), owner, secret, duration, addr ?? owner)
     const makeCommitmentTransaction = await this.partnerRegistrar.connect(_signer).commit(hash, this.partnerAddress)
     await makeCommitmentTransaction.wait()
 
@@ -193,9 +193,7 @@ export class PartnerRegistrar {
     if (!minCommitmentAge.gt(0)) {
       secret = generateSecret()
     } else {
-      console.time('commit')
       const commitResult = await this.commit(label, owner, duration, _signer, addr)
-      console.timeEnd('commit')
 
       secret = commitResult.secret
       const hash = commitResult.hash
@@ -203,9 +201,7 @@ export class PartnerRegistrar {
       const canReveal = await (new Promise((resolve, reject) => {
         setTimeout(async () => {
           try {
-            console.time('canReveal')
             const canReveal = await this.canReveal(hash)
-            console.timeEnd('canReveal')
 
             resolve(canReveal)
           } catch (error) {
