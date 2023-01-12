@@ -198,17 +198,11 @@ export class PartnerRegistrar {
       secret = commitResult.secret
       const hash = commitResult.hash
 
-      const canReveal = await (new Promise((resolve, reject) => {
+      const canReveal = await new Promise((resolve) => {
         setTimeout(async () => {
-          try {
-            const canReveal = await this.canReveal(hash)
-
-            resolve(canReveal)
-          } catch (error) {
-            reject(error)
-          }
+          resolve(await this.canReveal(hash))
         }, minCommitmentAge.toNumber() * 1000 + REVEAL_TIMEOUT_BUFFER)
-      }))
+      })
 
       if (!canReveal) {
         throw new Error('Cannot register because the commitment cannot be revealed')
