@@ -273,35 +273,68 @@ describe('partner registrar', () => {
     expect(await partnerRegistrar.canReveal(hash)).toBe(true)
   }, 3000000)
 
-  test('commit', async () => {
-    const defaultMinCommitmentAge = 5
+  describe('commit', () => {
+    test('should commit successfully', async () => {
+      const defaultMinCommitmentAge = 5
 
-    const {
-      partnerRegistrarContract,
-      partnerAccountAddress,
-      rskOwnerContract,
-      rifTokenContract,
-      rnsOwnerAddress,
-      rnsOwner,
-      provider
-    } = await deployPartnerRegistrar(
-      {
-        defaultMinCommitmentAge
-      }
-    )
-    const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwnerAddress,
+        rnsOwner,
+        provider
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge
+        }
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
-    const name = 'cheta'
-    const duration = BigNumber.from(2)
+      const name = 'cheta'
+      const duration = BigNumber.from(2)
 
-    const {
-      hash
-    } = await partnerRegistrar.commit(name, rnsOwnerAddress, duration, rnsOwner, rnsOwnerAddress)
+      const {
+        hash
+      } = await partnerRegistrar.commit(name, rnsOwnerAddress, duration, rnsOwner, rnsOwnerAddress)
 
-    expect(await partnerRegistrar.canReveal(hash)).toBe(false)
+      expect(await partnerRegistrar.canReveal(hash)).toBe(false)
 
-    await timeTravel(provider, defaultMinCommitmentAge)
+      await timeTravel(provider, defaultMinCommitmentAge)
 
-    expect(await partnerRegistrar.canReveal(hash)).toBe(true)
-  }, 3000000)
+      expect(await partnerRegistrar.canReveal(hash)).toBe(true)
+    }, 3000000)
+    test('should commit successfully if addr is not provided', async () => {
+      const defaultMinCommitmentAge = 5
+
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwnerAddress,
+        rnsOwner,
+        provider
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge
+        }
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+
+      const name = 'cheta'
+      const duration = BigNumber.from(2)
+
+      const {
+        hash
+      } = await partnerRegistrar.commit(name, rnsOwnerAddress, duration, rnsOwner)
+
+      expect(await partnerRegistrar.canReveal(hash)).toBe(false)
+
+      await timeTravel(provider, defaultMinCommitmentAge)
+
+      expect(await partnerRegistrar.canReveal(hash)).toBe(true)
+    }, 3000000)
+  })
 })
