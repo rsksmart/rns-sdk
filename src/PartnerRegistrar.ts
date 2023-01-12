@@ -71,8 +71,9 @@ export class PartnerRegistrar {
   /**
    * Returns the signer
    * @param signer will just return the signer if provided, otherwise will return the (signer) of the class
+   * @private
    */
-  getSigner (signer?: Signer): Signer {
+  private getSigner (signer?: Signer): Signer {
     if (signer) return signer
     if (!this.signer) {
       throw new Error('Signer is not defined')
@@ -106,12 +107,18 @@ export class PartnerRegistrar {
   }
 
   /**
+   * @typedef CommitmentResult
+   * @property secret - The secret used to create the commitment
+   * @property hash - The resulting commitment hash
+   */
+  /**
    * Make a commitment
    * @param label the name to register
    * @param owner the owner of the name
    * @param duration the duration to register the name
    * @param signer the signer for the transaction
    * @param addr the address to set for the name resolution
+   * @returns {CommitmentResult} the result of the commitment
    */
   async commit (label: string, owner: string, duration: BigNumber, signer?: Signer, addr?: string): Promise<{ secret: string, hash: string }> {
     const _signer = this.getSigner(signer)
@@ -126,6 +133,10 @@ export class PartnerRegistrar {
     }
   }
 
+  /**
+   * Reveals if the name is ready to be registered by calling register function.
+   * @param hash the commitment hash
+   */
   async canReveal (hash: string): Promise<boolean> {
     return this.partnerRegistrar.canReveal(hash)
   }
