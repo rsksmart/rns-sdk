@@ -97,29 +97,78 @@ describe('partner registrar', () => {
     expect((await partnerRegistrar.ownerOf(name))).toEqual(rnsOwnerAddress)
   }, 3000000)
 
-  test('commitAndRegister', async () => {
-    const {
-      partnerRegistrarContract,
-      partnerAccountAddress,
-      rskOwnerContract,
-      rifTokenContract,
-      partnerConfigurationContract,
-      rnsOwnerAddress,
-      rnsOwner
-    } = await deployPartnerRegistrar(
-      {
-        defaultMinCommitmentAge: 5
+  describe('commitAndRegister', () => {
+    test('should commit and register', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        partnerConfigurationContract,
+        rnsOwnerAddress,
+        rnsOwner
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge: 5
+        }
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+
+      const name = 'cheta'
+
+      expect((await partnerRegistrar.available(name))).toEqual(true)
+      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract, rnsOwner)
+
+      expect((await partnerRegistrar.available(name))).toEqual(false)
+    }, 3000000)
+    test('should commit and register when min commitment age is not greater than 0', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        partnerConfigurationContract,
+        rnsOwnerAddress,
+        rnsOwner
+      } = await deployPartnerRegistrar(
+
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+
+      const name = 'cheta'
+
+      expect((await partnerRegistrar.available(name))).toEqual(true)
+      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract, rnsOwner)
+
+      expect((await partnerRegistrar.available(name))).toEqual(false)
+    }, 3000000)
+    test('should throw a cannot reveal error when time not moved', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        partnerConfigurationContract,
+        rnsOwnerAddress,
+        rnsOwner
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge: 5
+        }
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+
+      const name = 'cheta'
+
+      expect((await partnerRegistrar.available(name))).toEqual(true)
+
+      try {
+        await partnerRegistrar.commitAndRegister(name, rnsOwnerAddress, BigNumber.from(2), toWei('4'), partnerConfigurationContract.address, rnsOwnerAddress, rnsOwner)
+      } catch (e) {
+        expect(e.message).toBe('Cannot register because the commitment cannot be revealed')
       }
-    )
-    const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
-
-    const name = 'cheta'
-
-    expect((await partnerRegistrar.available(name))).toEqual(true)
-    await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract, rnsOwner)
-
-    expect((await partnerRegistrar.available(name))).toEqual(false)
-  }, 3000000)
+    }, 3000000)
+  })
 
   test('register', async () => {
     const defaultMinCommitmentAge = 5
