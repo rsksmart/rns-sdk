@@ -71,9 +71,8 @@ export class PartnerRegistrar {
   /**
    * Returns the signer
    * @param signer will just return the signer if provided, otherwise will return the (signer) of the class
-   * @private
    */
-  private getSigner (signer?: Signer): Signer {
+  getSigner (signer?: Signer): Signer {
     if (signer) return signer
     if (!this.signer) {
       throw new Error('Signer is not defined')
