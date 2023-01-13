@@ -16,35 +16,39 @@ function commitAndRegister (partnerRegistrar: PartnerRegistrar, name: string, rn
 }
 
 describe('partner registrar', () => {
-  test('constructor', async () => {
-    const {
-      partnerRegistrarContract,
-      partnerAccountAddress,
-      rskOwnerContract,
-      rifTokenContract,
-      rnsOwner: owner
-    } = await deployPartnerRegistrar()
+  describe('constructor', function () {
+    test('should properly instantiate a new class', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwner: owner
+      } = await deployPartnerRegistrar()
 
-    let partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl, owner)
-    expect(await partnerRegistrar.getSigner().getAddress()).toEqual(await owner.getAddress())
-    expect(partnerRegistrar.getPartnerRegistrar().address).toEqual(partnerRegistrarContract.address)
-    expect(partnerRegistrar.getRskOwner().address).toEqual(rskOwnerContract.address)
-    expect(partnerRegistrar.getRifToken().address).toEqual(rifTokenContract.address)
-    expect(partnerRegistrar.getProvider().connection.url).toEqual(rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl, owner)
+      expect(await partnerRegistrar.signer?.getAddress()).toEqual(await owner.getAddress())
+      expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
+      expect(partnerRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
+      expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract.address)
+      expect(partnerRegistrar.provider.connection.url).toEqual(rpcUrl)
+    })
 
-    partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
-    try {
-      partnerRegistrar.getSigner()
-    } catch (error) {
-      expect(error.message).toBe('Signer is not defined')
-    }
-    expect(partnerRegistrar.getPartnerRegistrar().address).toEqual(partnerRegistrarContract.address)
+    test('should properly instantiate a new class with no signer', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract
+      } = await deployPartnerRegistrar()
 
-    partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
-    expect(await partnerRegistrar.getSigner(owner).getAddress()).toEqual(await owner.getAddress())
-
-    partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
-    expect(partnerRegistrar.getProvider().connection.url).toEqual(rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      expect(partnerRegistrar.signer).toBeUndefined()
+      expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
+      expect(partnerRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
+      expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract.address)
+      expect(partnerRegistrar.provider.connection.url).toEqual(rpcUrl)
+    })
   })
 
   test('price', async () => {
@@ -54,7 +58,7 @@ describe('partner registrar', () => {
       rskOwnerContract,
       rifTokenContract
     } = await deployPartnerRegistrar()
-    const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+    const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
     const duration = BigNumber.from(2)
     const name = 'cheta'
@@ -68,7 +72,7 @@ describe('partner registrar', () => {
       rskOwnerContract,
       rifTokenContract
     } = await deployPartnerRegistrar()
-    const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+    const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
     const name = 'cheta'
     expect((await partnerRegistrar.available(name))).toBe(true)
@@ -86,7 +90,7 @@ describe('partner registrar', () => {
     } = await deployPartnerRegistrar({
       defaultMinCommitmentAge: 5
     })
-    const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+    const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
     const name = 'cheta'
 
@@ -110,7 +114,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge: 5
         }
       )
-      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
       const name = 'cheta'
 
@@ -131,7 +135,7 @@ describe('partner registrar', () => {
       } = await deployPartnerRegistrar(
 
       )
-      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
       const name = 'cheta'
 
@@ -154,7 +158,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge: 5
         }
       )
-      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
       const name = 'cheta'
 
@@ -185,7 +189,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge
         }
       )
-      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
       const name = 'cheta'
       const duration = BigNumber.from(2)
@@ -222,7 +226,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge
         }
       )
-      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
       const name = 'cheta'
       const duration = BigNumber.from(2)
@@ -257,7 +261,7 @@ describe('partner registrar', () => {
         defaultMinCommitmentAge
       }
     )
-    const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+    const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
     const name = 'cheta'
     const duration = BigNumber.from(2)
@@ -290,7 +294,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge
         }
       )
-      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl, rnsOwner)
 
       const name = 'cheta'
       const duration = BigNumber.from(2)
@@ -298,6 +302,37 @@ describe('partner registrar', () => {
       const {
         hash
       } = await partnerRegistrar.commit(name, rnsOwnerAddress, duration, rnsOwner, rnsOwnerAddress)
+
+      expect(await partnerRegistrar.canReveal(hash)).toBe(false)
+
+      await timeTravel(provider, defaultMinCommitmentAge)
+
+      expect(await partnerRegistrar.canReveal(hash)).toBe(true)
+    }, 3000000)
+    test('should commit successfully if signer is not provided in method', async () => {
+      const defaultMinCommitmentAge = 5
+
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwnerAddress,
+        rnsOwner,
+        provider
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge
+        }
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl, rnsOwner)
+
+      const name = 'cheta'
+      const duration = BigNumber.from(2)
+
+      const {
+        hash
+      } = await partnerRegistrar.commit(name, rnsOwnerAddress, duration, undefined, rnsOwnerAddress)
 
       expect(await partnerRegistrar.canReveal(hash)).toBe(false)
 
@@ -321,7 +356,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge
         }
       )
-      const partnerRegistrar = new PartnerRegistrar(partnerRegistrarContract.address, partnerAccountAddress, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
 
       const name = 'cheta'
       const duration = BigNumber.from(2)
@@ -335,6 +370,31 @@ describe('partner registrar', () => {
       await timeTravel(provider, defaultMinCommitmentAge)
 
       expect(await partnerRegistrar.canReveal(hash)).toBe(true)
+    }, 3000000)
+    test('should throw an error if no signer is provided', async () => {
+      const defaultMinCommitmentAge = 5
+
+      const {
+        partnerRegistrarContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwnerAddress
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge
+        }
+      )
+      const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, rpcUrl)
+
+      const name = 'cheta'
+      const duration = BigNumber.from(2)
+
+      try {
+        await partnerRegistrar.commit(name, rnsOwnerAddress, duration, undefined, rnsOwnerAddress)
+      } catch (e) {
+        expect(e.message).toBe('Signer is not defined')
+      }
     }, 3000000)
   })
 })

@@ -1,9 +1,10 @@
 import { BigNumber, utils } from 'ethers'
 
-import { deployRskRegistrar, registerDomain } from './util'
+import { deployRskRegistrar, registerDomain, timeTravel } from './util'
 import { RSKRegistrar } from '../src/RSKRegistrar'
 import { hashLabel } from '../src/hash'
 import { generateSecret } from '../src/random'
+import { AddrResolver } from '../src'
 
 describe('rsk registrar', () => {
   test('constructor', async () => {
@@ -59,33 +60,69 @@ describe('rsk registrar', () => {
     expect(await canReveal()).toEqual(true)
     expect(await myCanReveal()).toEqual(true)
   })
-  test('register', async () => {
-    const label = 'domain-to-test-registration'
-    const { provider, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
-    const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
-    const owner = await testAccount.getAddress()
-    const secret = generateSecret()
-    const hash = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
-    const makeCommitmentTransactionTx = await fifsAddrRegistrarContract.commit(hash)
-    await makeCommitmentTransactionTx.wait()
 
-    await provider.send('evm_increaseTime', [1001])
-    await provider.send('evm_mine', [])
+  describe('register', function () {
+    test('should register successfully', async () => {
+      const label = 'domain-to-test-registration'
+      const { provider, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
+      const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
+      const owner = await testAccount.getAddress()
+      const secret = generateSecret()
+      const hash = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
+      const makeCommitmentTransactionTx = await fifsAddrRegistrarContract.commit(hash)
+      await makeCommitmentTransactionTx.wait()
 
-    const duration = BigNumber.from('1')
-    const price = await rskRegistrar.price(label, duration)
-    const registerTx = await rskRegistrar.register(
-      label,
-      owner,
-      secret,
-      duration,
-      price
-    )
+      await timeTravel(provider, 1001)
 
-    const registerReceipt = await registerTx.wait()
-    expect(registerReceipt.status).toEqual(1)
-    const domainOwner = await rskOwnerContract.ownerOf(hashLabel(label))
-    expect(domainOwner).toEqual(owner)
+      const duration = BigNumber.from('1')
+      const price = await rskRegistrar.price(label, duration)
+      const registerTx = await rskRegistrar.register(
+        label,
+        owner,
+        secret,
+        duration,
+        price
+      )
+
+      const registerReceipt = await registerTx.wait()
+      expect(registerReceipt.status).toEqual(1)
+      const domainOwner = await rskOwnerContract.ownerOf(hashLabel(label))
+      expect(domainOwner).toEqual(owner)
+    })
+    test('should register successfully with a resolution addr', async () => {
+      const label = 'domain-to-test-registration'
+      const { provider, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount, rnsRegistryContract } = await deployRskRegistrar()
+      const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
+      const owner = await testAccount.getAddress()
+      const secret = generateSecret()
+      const hash = await fifsAddrRegistrarContract.makeCommitment(hashLabel(label), owner, secret)
+      const makeCommitmentTransactionTx = await fifsAddrRegistrarContract.commit(hash)
+      await makeCommitmentTransactionTx.wait()
+
+      await timeTravel(provider, 1001)
+
+      const duration = BigNumber.from('1')
+      const price = await rskRegistrar.price(label, duration)
+
+      const resolutionAddr = '0x0000000000000000000000000000000000000001'
+
+      const registerTx = await rskRegistrar.register(
+        label,
+        owner,
+        secret,
+        duration,
+        price,
+        resolutionAddr
+      )
+
+      const registerReceipt = await registerTx.wait()
+      expect(registerReceipt.status).toEqual(1)
+      const domainOwner = await rskOwnerContract.ownerOf(hashLabel(label))
+      expect(domainOwner).toEqual(owner)
+
+      const addrResolver = new AddrResolver(rnsRegistryContract.address, testAccount)
+      expect((await addrResolver.addr(label + '.rsk'))).toEqual(resolutionAddr)
+    })
   })
 
   test('ownerOf', async () => {

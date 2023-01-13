@@ -21,58 +21,33 @@ const erc677Interface = [
 ]
 
 export class PartnerRegistrar {
-  private readonly rskOwner: Contract
-  private readonly partnerRegistrar: Contract
-  private readonly rifToken: Contract
-  private readonly jsonRpcProvider: providers.JsonRpcProvider
+  rskOwner: Contract
+  partnerRegistrar: Contract
+  rifToken: Contract
+  provider: providers.JsonRpcProvider
+  signer?: Signer
 
   constructor (
-    partnerRegistrarAddress: string,
     private readonly partnerAddress: string,
+    partnerRegistrarAddress: string,
     rskOwnerAddress: string,
     rifTokenAddress: string,
-    provider: string,
-    private readonly signer?: Signer
+    rpcUrl: string,
+    signer?: Signer
   ) {
-    this.jsonRpcProvider = new providers.JsonRpcProvider(provider)
-    this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, this.jsonRpcProvider)
-    this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, this.jsonRpcProvider)
-    this.rifToken = new Contract(rifTokenAddress, erc677Interface, this.jsonRpcProvider)
-  }
-
-  /**
-   * Returns the Partner Registrar contract instance
-   */
-  getPartnerRegistrar (): Contract {
-    return this.partnerRegistrar
-  }
-
-  /**
-   * Returns the RSK Owner contract instance
-   */
-  getRskOwner (): Contract {
-    return this.rskOwner
-  }
-
-  /**
-   * Returns the RIF token contract instance
-   */
-  getRifToken (): Contract {
-    return this.rifToken
-  }
-
-  /**
-   * Returns the provider
-   */
-  getProvider (): providers.JsonRpcProvider {
-    return this.jsonRpcProvider
+    this.provider = new providers.JsonRpcProvider(rpcUrl)
+    this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, this.provider)
+    this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, this.provider)
+    this.rifToken = new Contract(rifTokenAddress, erc677Interface, this.provider)
+    this.signer = signer
   }
 
   /**
    * Returns the signer
    * @param signer will just return the signer if provided, otherwise will return the (signer) of the class
+   * @private
    */
-  getSigner (signer?: Signer): Signer {
+  private getSigner (signer?: Signer): Signer {
     if (signer) return signer
     if (!this.signer) {
       throw new Error('Signer is not defined')
@@ -195,7 +170,7 @@ export class PartnerRegistrar {
 
     let secret: string | undefined
 
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, this.jsonRpcProvider.connection.url)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, this.provider.connection.url)
 
     const minCommitmentAge = await partnerConfiguration.getMinCommitmentAge()
 
