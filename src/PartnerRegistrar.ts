@@ -1,4 +1,4 @@
-import { Signer, Contract, BigNumber, utils, constants, providers } from 'ethers'
+import { Signer, Contract, BigNumber, utils, constants } from 'ethers'
 import { hashLabel } from './hash'
 import { generateSecret } from './random'
 import { PartnerConfiguration } from './PartnerConfiguration'
@@ -40,19 +40,6 @@ export class PartnerRegistrar {
   }
 
   /**
-   * Returns the signer
-   * @param signer will just return the signer if provided, otherwise will return the (signer) of the class
-   * @private
-   */
-  private getSigner (signer?: Signer): Signer {
-    if (signer) return signer
-    if (!this.signer) {
-      throw new Error('Signer is not defined')
-    }
-    return this.signer
-  }
-
-  /**
    * Checks availability of an RNS name
    * @param label the name to register
    */
@@ -87,15 +74,13 @@ export class PartnerRegistrar {
    * @param label the name to register
    * @param owner the owner of the name
    * @param duration the duration to register the name
-   * @param signer the signer for the transaction
    * @param addr the address to set for the name resolution
    * @returns {CommitmentResult} the result of the commitment
    */
-  async commit (label: string, owner: string, duration: BigNumber, signer?: Signer, addr?: string): Promise<{ secret: string, hash: string }> {
-    const _signer = this.getSigner(signer)
+  async commit (label: string, owner: string, duration: BigNumber, addr?: string): Promise<{ secret: string, hash: string }> {
     const secret = generateSecret()
     const hash = await this.partnerRegistrar.makeCommitment(hashLabel(label), owner, secret, duration, addr ?? owner)
-    const makeCommitmentTransaction = await this.partnerRegistrar.connect(_signer).commit(hash, this.partnerAddress)
+    const makeCommitmentTransaction = await this.partnerRegistrar.commit(hash, this.partnerAddress)
     await makeCommitmentTransaction.wait()
 
     return {
@@ -120,9 +105,8 @@ export class PartnerRegistrar {
    * @param duration the duration to register the name
    * @param amount the amount for the name registration
    * @param addr the address to set for the name resolution
-   * @param signer the signer for the transaction
    */
-  async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string, signer?: Signer): Promise<boolean> {
+  async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<boolean> {
     /* Encoding:
       | signature  |  4 bytes      - offset  0
       | owner      | 20 bytes      - offset  4
@@ -143,9 +127,7 @@ export class PartnerRegistrar {
 
     const data = `${_signature}${_owner}${_secret}${_duration}${_addr}${_partner}${_name}`
 
-    const _signer = this.getSigner(signer)
-
-    const transaction = await this.rifToken.connect(_signer).transferAndCall(this.partnerRegistrar.address, amount, data)
+    const transaction = await this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data)
 
     return transaction.wait()
   }
@@ -158,12 +140,9 @@ export class PartnerRegistrar {
    * @param amount the amount for the name registration
    * @param partnerConfigurationAddress the address of the partner configuration contract
    * @param addr the address to set for the name resolution
-   * @param signer the signer for the transaction
    */
-  async commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string, signer?: Signer): Promise<boolean> {
+  async commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string): Promise<boolean> {
     const REVEAL_TIMEOUT_BUFFER = 30 * 1000 // 30 seconds (time to mine a block in RSK)
-
-    const _signer = this.getSigner(signer)
 
     let secret: string | undefined
 
@@ -175,7 +154,7 @@ export class PartnerRegistrar {
     if (!minCommitmentAge.gt(0)) {
       secret = generateSecret()
     } else {
-      const commitResult = await this.commit(label, owner, duration, _signer, addr)
+      const commitResult = await this.commit(label, owner, duration, addr)
 
       secret = commitResult.secret
       const hash = commitResult.hash
@@ -191,6 +170,6 @@ export class PartnerRegistrar {
       }
     }
 
-    return this.register(label, owner, secret, duration, amount, addr, _signer)
+    return this.register(label, owner, secret, duration, amount, addr)
   }
 }
