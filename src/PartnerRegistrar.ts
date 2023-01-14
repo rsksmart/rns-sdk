@@ -24,21 +24,18 @@ export class PartnerRegistrar {
   rskOwner: Contract
   partnerRegistrar: Contract
   rifToken: Contract
-  provider: providers.JsonRpcProvider
-  signer?: Signer
+  signer: Signer
 
   constructor (
     private readonly partnerAddress: string,
     partnerRegistrarAddress: string,
     rskOwnerAddress: string,
     rifTokenAddress: string,
-    rpcUrl: string,
-    signer?: Signer
+    signer: Signer
   ) {
-    this.provider = new providers.JsonRpcProvider(rpcUrl)
-    this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, this.provider)
-    this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, this.provider)
-    this.rifToken = new Contract(rifTokenAddress, erc677Interface, this.provider)
+    this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, signer)
+    this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, signer)
+    this.rifToken = new Contract(rifTokenAddress, erc677Interface, signer)
     this.signer = signer
   }
 
@@ -170,7 +167,7 @@ export class PartnerRegistrar {
 
     let secret: string | undefined
 
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, this.provider.connection.url)
+    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, this.signer)
 
     const minCommitmentAge = await partnerConfiguration.getMinCommitmentAge()
 
