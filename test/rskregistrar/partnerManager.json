@@ -1,0 +1,201 @@
+{
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "partner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "ownerAccount",
+          "type": "address"
+        }
+      ],
+      "name": "PartnerAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "partner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "ownerAccount",
+          "type": "address"
+        }
+      ],
+      "name": "PartnerRemoved",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "partner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "partnerOwnerAccount",
+          "type": "address"
+        }
+      ],
+      "name": "addPartner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "partner",
+          "type": "address"
+        }
+      ],
+      "name": "getPartnerConfiguration",
+      "outputs": [
+        {
+          "internalType": "contract IPartnerConfiguration",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "partner",
+          "type": "address"
+        }
+      ],
+      "name": "getPartnerOwnerAccount",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "partner",
+          "type": "address"
+        }
+      ],
+      "name": "isPartner",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "partner",
+          "type": "address"
+        }
+      ],
+      "name": "removePartner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "partner",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IPartnerConfiguration",
+          "name": "partnerConfiguration",
+          "type": "address"
+        }
+      ],
+      "name": "setPartnerConfiguration",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5061001a3361001f565b61006f565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6106288061007e6000396000f3fe608060405234801561001057600080fd5b50600436106100a35760003560e01c80638da5cb5b11610076578063e1818fbb1161005b578063e1818fbb1461016e578063ea3c281a14610181578063f2fde38b1461019457600080fd5b80638da5cb5b1461014a578063b16bd7991461015b57600080fd5b806314049bd9146100a857806342ce4719146100d8578063715018a6146101045780638c0f9aac1461010e575b600080fd5b6100bb6100b6366004610595565b6101a7565b6040516001600160a01b0390911681526020015b60405180910390f35b6100bb6100e6366004610595565b6001600160a01b039081166000908152600360205260409020541690565b61010c61021c565b005b61013a61011c366004610595565b6001600160a01b031660009081526001602052604090205460ff1690565b60405190151581526020016100cf565b6000546001600160a01b03166100bb565b61010c6101693660046105b9565b610230565b61010c61017c3660046105b9565b6102b1565b61010c61018f366004610595565b6103d8565b61010c6101a2366004610595565b610439565b6001600160a01b03808216600090815260026020526040812054909116806102165760405162461bcd60e51b815260206004820152601d60248201527f506172746e657220636f6e66696775726174696f6e206e6f742073657400000060448201526064015b60405180910390fd5b92915050565b6102246104c9565b61022e6000610523565b565b6102386104c9565b6001600160a01b038281166000818152600160208181526040808420805460ff191690931790925560039052808220805473ffffffffffffffffffffffffffffffffffffffff19169486169485179055517f972eb0916813c99d10e0f04093c87cb4c443d43a2f968ec82ab79d814bd106c49190a35050565b6102b96104c9565b6001600160a01b0381166103355760405162461bcd60e51b815260206004820152602560248201527f506172746e65724d616e616765723a20496e76616c696420636f6e666967757260448201527f6174696f6e000000000000000000000000000000000000000000000000000000606482015260840161020d565b6001600160a01b03821660009081526001602052604090205460ff1661039d5760405162461bcd60e51b815260206004820152601d60248201527f506172746e65724d616e616765723a206e6f74206120706172746e6572000000604482015260640161020d565b6001600160a01b039182166000908152600260205260409020805473ffffffffffffffffffffffffffffffffffffffff191691909216179055565b6103e06104c9565b6001600160a01b038082166000818152600160209081526040808320805460ff1916905560039091528082205490519316927f366d16832f7e9a6b98b524a1249a7bb85b9dcf983dc4b1eed46fc0c512b0e3949190a350565b6104416104c9565b6001600160a01b0381166104bd5760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201527f6464726573730000000000000000000000000000000000000000000000000000606482015260840161020d565b6104c681610523565b50565b6000546001600160a01b0316331461022e5760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604482015260640161020d565b600080546001600160a01b0383811673ffffffffffffffffffffffffffffffffffffffff19831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6001600160a01b03811681146104c657600080fd5b6000602082840312156105a757600080fd5b81356105b281610580565b9392505050565b600080604083850312156105cc57600080fd5b82356105d781610580565b915060208301356105e781610580565b80915050925092905056fea2646970667358221220debd440685c25abe7170c5b837646e7ceba0626241073c6520001001054933d464736f6c63430008100033"
+}

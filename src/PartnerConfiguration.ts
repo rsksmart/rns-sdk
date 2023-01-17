@@ -1,4 +1,4 @@
-import { Signer, Contract, BigNumber, providers } from 'ethers'
+import { Signer, Contract, BigNumber } from 'ethers'
 
 const partnerConfigurationInterface = [
   'function getMinLength() external view returns (uint256)',
@@ -22,21 +22,13 @@ const partnerConfigurationInterface = [
 ]
 
 export class PartnerConfiguration {
-  private readonly partnerConfiguration: Contract
+  readonly partnerConfiguration: Contract
+  readonly signer: Signer
 
-  constructor (private readonly partnerConfigurationAddress: string, private readonly provider: string, private readonly signer?: Signer) {
-    this.partnerConfiguration = new Contract(partnerConfigurationAddress, partnerConfigurationInterface, new providers.JsonRpcProvider(provider))
+  constructor (private readonly partnerConfigurationAddress: string, signer: Signer) {
+    this.partnerConfiguration = new Contract(partnerConfigurationAddress, partnerConfigurationInterface, signer)
     this.signer = signer
   }
-
-  /**
-   * Returns a contract instance of the Partner Configuration
-   */
-  getPartnerConfiguration (): Contract { return this.partnerConfiguration }
-  /**
-   * Returns the provider
-   */
-  getProvider (): string { return this.provider }
 
   /**
    * returns the minimum length allowed for a domain name
@@ -111,110 +103,79 @@ export class PartnerConfiguration {
    * @param name the domain name
    * @param duration the duration for the registration
    */
-  validateName (name: string, duration: BigNumber): Promise<void> {
-    return this.partnerConfiguration.validateName(name, duration)
+  async validateName (name: string, duration: BigNumber): Promise<void> {
+    await this.partnerConfiguration.validateName(name, duration)
   }
 
   /**
    * sets the discount assigned to the partner for each domain name registered
    *
    * @param discount the discount assigned to the partner for each domain name registered
-   * @param signer the signer for the transaction
    */
-  async setDiscount (discount: BigNumber, signer?: Signer): Promise<void> {
-    const _signer = this.getSigner(signer)
-    await (await this.partnerConfiguration.connect(_signer).setDiscount(discount)).wait()
+  async setDiscount (discount: BigNumber): Promise<void> {
+    await (await this.partnerConfiguration.connect(this.signer).setDiscount(discount)).wait()
   }
 
   /**
    * sets the maximum duration allowed for a domain name
    *
    * @param maxDuration the maximum duration allowed for a domain name in days
-   * @param signer the signer for the transaction
    */
-  async setMaxDuration (maxDuration: BigNumber, signer?: Signer): Promise<void> {
-    const _signer = this.getSigner(signer)
-    await (await this.partnerConfiguration.connect(_signer).setMaxDuration(maxDuration)).wait()
+  async setMaxDuration (maxDuration: BigNumber): Promise<void> {
+    await (await this.partnerConfiguration.connect(this.signer).setMaxDuration(maxDuration)).wait()
   }
 
   /**
    * sets the minimum length allowed for a domain name
    *
    * @param minLength the minimum length allowed for a domain name
-   * @param signer the signer for the transaction
    */
-  async setMinLength (minLength: BigNumber, signer?: Signer): Promise<void> {
-    const _signer = this.getSigner(signer)
-    await (await this.partnerConfiguration.connect(_signer).setMinLength(minLength)).wait()
+  async setMinLength (minLength: BigNumber): Promise<void> {
+    await (await this.partnerConfiguration.connect(this.signer).setMinLength(minLength)).wait()
   }
 
   /**
    * sets the maximum length allowed for a domain name
    *
    * @param maxLength the maximum length allowed for a domain name
-   * @param signer the signer for the transaction
    */
-  async setMaxLength (maxLength: BigNumber, signer?: Signer): Promise<void> {
-    const _signer = this.getSigner(signer)
-    await (await this.partnerConfiguration.connect(_signer).setMaxLength(maxLength)).wait()
+  async setMaxLength (maxLength: BigNumber): Promise<void> {
+    await (await this.partnerConfiguration.connect(this.signer).setMaxLength(maxLength)).wait()
   }
 
   /**
    * sets support for unicode domains
    *
    * @param flag true if unicode domains are supported, false otherwise
-   * @param signer the signer for the transaction
    */
-  async setUnicodeSupport (flag: boolean, signer?: Signer): Promise<void> {
-    const _signer = this.getSigner(signer)
-    await (await this.partnerConfiguration.connect(_signer).setUnicodeSupport(flag)).wait()
+  async setUnicodeSupport (flag: boolean): Promise<void> {
+    await (await this.partnerConfiguration.connect(this.signer).setUnicodeSupport(flag)).wait()
   }
 
   /**
    * sets the minimum commitment age allowed for a domain name
    *
    * @param minCommitmentAge the minimum commitment age allowed for a domain name in seconds
-   * @param signer the signer for the transaction
    */
-  async setMinCommitmentAge (minCommitmentAge: BigNumber, signer?: Signer): Promise<void> {
-    const _signer = this.getSigner(signer)
-    await (await this.partnerConfiguration.connect(_signer).setMinCommitmentAge(minCommitmentAge))
+  async setMinCommitmentAge (minCommitmentAge: BigNumber): Promise<void> {
+    await (await this.partnerConfiguration.connect(this.signer).setMinCommitmentAge(minCommitmentAge))
   }
 
   /**
    * sets the fee percentage assigned to the partner for each domain name registered
    *
    * @param feePercentage the new fee percentage
-   * @param signer the signer for the transaction
    */
-  async setFeePercentage (feePercentage: BigNumber, signer?: Signer): Promise<void> {
-    const _signer = this.getSigner(signer)
-    await (await this.partnerConfiguration.connect(_signer).setFeePercentage(feePercentage)).wait()
+  async setFeePercentage (feePercentage: BigNumber): Promise<void> {
+    await (await this.partnerConfiguration.connect(this.signer).setFeePercentage(feePercentage)).wait()
   }
 
   /**
    * sets the minimum duration allowed for a domain name
    *
    * @param minDuration the minimum duration allowed for a domain name in days
-   * @param signer the signer for the transaction
    */
-  async setMinDuration (minDuration: BigNumber, signer?: Signer): Promise<void> {
-    const _signer = this.getSigner(signer)
-    await (await this.partnerConfiguration.connect(_signer).setMinDuration(minDuration)).wait()
-  }
-
-  /**
-   * returns the signer
-   *
-   * @param signer the signer for the transaction
-   */
-  getSigner (signer?: Signer): Signer {
-    const _signer = signer || this.signer
-
-    if (!_signer) {
-      throw new Error('Signer is not defined')
-    }
-
-    return _signer
+  async setMinDuration (minDuration: BigNumber): Promise<void> {
+    await (await this.partnerConfiguration.connect(this.signer).setMinDuration(minDuration)).wait()
   }
 }
