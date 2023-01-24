@@ -36,6 +36,7 @@ describe('partner registrar', () => {
     expect(partnerRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
     expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract.address)
     expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
+    expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
   })
 
   test('price', async () => {
@@ -342,5 +343,30 @@ describe('partner registrar', () => {
         expect(await partnerRegistrar.canReveal(hash)).toBe(true)
       }, 3000000)
     })
+  })
+
+  describe('renew', () => {
+    test('should renew', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerRenewerContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        partnerConfigurationContract,
+        rnsOwnerAddress,
+        rnsOwner: owner
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge: 5
+        }
+      )
+      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
+
+      const name = 'cheta'
+      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract)
+
+      expect(await partnerRegistrar.renew(name, BigNumber.from(2), toWei('4'))).toBe(true)
+    }, 3000000)
   })
 })

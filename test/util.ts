@@ -360,7 +360,7 @@ export const deployPartnerRegistrar = async (
   const feeManagerContract = await feeManagerFactory.deploy(
     rifTokenContract.address,
     partnerRegistrarContract.address,
-    partnerRegistrarContract.address,
+    partnerRenewerContract.address,
     partnerManagerContract.address,
     rnsOwnerAddress
   )
@@ -376,9 +376,11 @@ export const deployPartnerRegistrar = async (
   const partnerAccountAddress = await partnerAccount.getAddress()
 
   await sendAndWait(partnerRegistrarContract.setFeeManager(feeManagerContract.address))
+  await sendAndWait(partnerRenewerContract.setFeeManager(feeManagerContract.address))
   await sendAndWait(partnerManagerContract.addPartner(partnerAccountAddress, partnerConfigurationContract.address))
   await sendAndWait(rifTokenContract.transfer(rnsOwnerAddress, toWei('10')))
   await sendAndWait(rskOwnerContract.addRegistrar(partnerRegistrarContract.address))
+  await sendAndWait(rskOwnerContract.addRenewer(partnerRenewerContract.address))
   await sendAndWait(rnsRegistryContract.setSubnodeOwner(constants.HashZero, hashLabel(rskLabel), rskOwnerContract.address))
 
   return {

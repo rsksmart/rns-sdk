@@ -154,7 +154,7 @@ export class PartnerRegistrar {
     const _partner = this.partnerAddress.slice(2).toLowerCase()
     const _name = Buffer.from(utils.toUtf8Bytes(label)).toString('hex')
 
-    const data = `${_signature}${_duration}$${_partner}${_name}`
+    const data = `${_signature}${_duration}${_partner}${_name}`
 
     const transaction = await this.rifToken.transferAndCall(this.partnerRenewer.address, amount, data)
 
