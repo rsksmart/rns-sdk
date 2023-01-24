@@ -22,6 +22,8 @@ import StringUtilsData from './rskregistrar/stringUtils.json'
 import FIFSAddrRegistrarData from './rskregistrar/fifsAddrRegistrar.json'
 import PartnerConfigurationData from './rskregistrar/partnerConfiguration.json'
 import PartnerRegistrarData from './rskregistrar/partnerRegistrar.json'
+import PartnerRenewerData from './rskregistrar/partnerRenewer.json'
+import AccessControlData from './rskregistrar/accessControl.json'
 import PartnerManagerData from './rskregistrar/partnerManager.json'
 import FeeManagerData from './rskregistrar/feeManager.json'
 
@@ -101,6 +103,14 @@ export const deployRNSFactory = (domainLabel: string, subdomainLabel: string): (
 }
 
 export const toWei = (value: string): BigNumber => BigNumber.from(value).mul(BigNumber.from('10').pow(BigNumber.from('18')))
+
+export const deployAccessControl = async (rnsOwner: Signer): Promise<Contract> => {
+  const accessControlFactory = new ContractFactory(AccessControlData.abi, AccessControlData.bytecode, rnsOwner)
+  const accessControlContract = await accessControlFactory.deploy()
+  await accessControlContract.deployTransaction.wait()
+
+  return accessControlContract
+}
 
 export const deployRskRegistrar = async (): Promise<{
   provider: providers.JsonRpcProvider,
@@ -213,16 +223,27 @@ export const DEFAULT_DISCOUNT = 4
 export const DEFAULT_IS_UNICODE_SUPPORTED = false
 export const DEFAULT_FEE_PERCENTAGE = 5
 export const deployPartnerConfiguration = async ({
-  defaultMinCommitmentAge = DEFAULT_MIN_COMMITMENT_AGE
+  defaultMinCommitmentAge = DEFAULT_MIN_COMMITMENT_AGE,
+  accessControlContract,
+  owner
 }: {
-    defaultMinCommitmentAge?: number
+    defaultMinCommitmentAge?: number,
+  accessControlContract?: Contract,
+  owner?: providers.JsonRpcSigner
 } = {}): Promise<{
   provider: providers.JsonRpcProvider, owner: providers.JsonRpcSigner, partnerConfigurationFactory: ContractFactory, partnerConfigurationContract: Contract,
+  accessControlContract: Contract,
 }> => {
   const provider = new providers.JsonRpcProvider(rpcUrl)
-  const owner = provider.getSigner(0)
-  const partnerConfigurationFactory = new ContractFactory(PartnerConfigurationData.abi, PartnerConfigurationData.bytecode, owner)
+  const _owner = owner ?? provider.getSigner(0)
+
+  if (!accessControlContract) {
+    accessControlContract = await deployAccessControl(_owner)
+  }
+
+  const partnerConfigurationFactory = new ContractFactory(PartnerConfigurationData.abi, PartnerConfigurationData.bytecode, _owner)
   const partnerConfigurationContract = await partnerConfigurationFactory.deploy(
+    accessControlContract.address,
     DEFAULT_MIN_LENGTH,
     DEFAULT_MAX_LENGTH,
     DEFAULT_IS_UNICODE_SUPPORTED,
@@ -236,12 +257,12 @@ export const deployPartnerConfiguration = async ({
 
   return {
     provider,
-    owner,
+    owner: _owner,
     partnerConfigurationFactory,
-    partnerConfigurationContract
+    partnerConfigurationContract,
+    accessControlContract
   }
 }
-
 export const deployPartnerRegistrar = async (
   {
     defaultMinCommitmentAge = DEFAULT_MIN_COMMITMENT_AGE
@@ -251,11 +272,11 @@ export const deployPartnerRegistrar = async (
 ): Promise<{
   provider: providers.JsonRpcProvider,
   partnerAccount: providers.JsonRpcSigner,
-  partnerOwnerAccount: providers.JsonRpcSigner,
   rnsRegistryContract: Contract,
   rifTokenContract: Contract,
   addrResolverContract: Contract,
   partnerRegistrarContract: Contract,
+  partnerRenewerContract: Contract,
   partnerManagerContract: Contract,
   rskOwnerContract: Contract,
   feeManagerContract: Contract,
@@ -298,8 +319,12 @@ export const deployPartnerRegistrar = async (
   const stringUtilsContract = await stringUtilsFactory.deploy()
   await stringUtilsContract.deployTransaction.wait()
 
+  const accessControlContract = await deployAccessControl(rnsOwner)
+
   const partnerManagerFactory = new ContractFactory(PartnerManagerData.abi, PartnerManagerData.bytecode, rnsOwner)
-  const partnerManagerContract = await partnerManagerFactory.deploy()
+  const partnerManagerContract = await partnerManagerFactory.deploy(
+    accessControlContract.address
+  )
   await partnerManagerContract.deployTransaction.wait()
 
   const partnerRegistrarFactory = new ContractFactory(PartnerRegistrarData.abi,
@@ -309,13 +334,27 @@ export const deployPartnerRegistrar = async (
       .replace(/__StringUtils____________________________/g, stringUtilsContract.address.slice(2).toLowerCase()), // linking
     rnsOwner)
 
+  const partnerRenewerFactory = new ContractFactory(PartnerRenewerData.abi,
+    PartnerRenewerData
+      .bytecode
+      .replace(/__BytesUtils____________________________/g, bytesUtilsContract.address.slice(2).toLowerCase()), // linking
+    rnsOwner)
+
   const partnerRegistrarContract = await partnerRegistrarFactory.deploy(
+    accessControlContract.address,
     rskOwnerContract.address,
     rifTokenContract.address,
     partnerManagerContract.address,
     rnsRegistryContract.address,
     hashDomain(rskLabel))
   await partnerRegistrarContract.deployTransaction.wait()
+
+  const partnerRenewerContract = await partnerRenewerFactory.deploy(
+    accessControlContract.address,
+    rskOwnerContract.address,
+    rifTokenContract.address,
+    partnerManagerContract.address)
+  await partnerRenewerContract.deployTransaction.wait()
 
   const feeManagerFactory = new ContractFactory(FeeManagerData.abi, FeeManagerData.bytecode, rnsOwner)
   const feeManagerContract = await feeManagerFactory.deploy(
@@ -328,17 +367,16 @@ export const deployPartnerRegistrar = async (
   await feeManagerContract.deployTransaction.wait()
 
   const { partnerConfigurationContract } = await deployPartnerConfiguration({
-    defaultMinCommitmentAge
+    defaultMinCommitmentAge,
+    accessControlContract,
+    owner: rnsOwner
   })
 
   const partnerAccount = provider.getSigner(3)
-  const partnerOwnerAccount = provider.getSigner(4)
   const partnerAccountAddress = await partnerAccount.getAddress()
-  const partnerOwnerAccountAddress = await partnerOwnerAccount.getAddress()
 
   await sendAndWait(partnerRegistrarContract.setFeeManager(feeManagerContract.address))
-  await sendAndWait(partnerManagerContract.addPartner(partnerAccountAddress, partnerOwnerAccountAddress))
-  await sendAndWait(partnerManagerContract.setPartnerConfiguration(partnerAccountAddress, partnerConfigurationContract.address))
+  await sendAndWait(partnerManagerContract.addPartner(partnerAccountAddress, partnerConfigurationContract.address))
   await sendAndWait(rifTokenContract.transfer(rnsOwnerAddress, toWei('10')))
   await sendAndWait(rskOwnerContract.addRegistrar(partnerRegistrarContract.address))
   await sendAndWait(rnsRegistryContract.setSubnodeOwner(constants.HashZero, hashLabel(rskLabel), rskOwnerContract.address))
@@ -350,10 +388,10 @@ export const deployPartnerRegistrar = async (
     rskOwnerContract,
     rifTokenContract,
     partnerRegistrarContract,
+    partnerRenewerContract,
     partnerManagerContract,
     partnerAccount,
     partnerAccountAddress,
-    partnerOwnerAccount,
     feeManagerContract,
     rnsOwner,
     rnsOwnerAddress,

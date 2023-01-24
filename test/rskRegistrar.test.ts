@@ -1,10 +1,8 @@
 import { BigNumber, utils } from 'ethers'
 
 import { deployRskRegistrar, registerDomain, timeTravel } from './util'
-import { RSKRegistrar } from '../src/RSKRegistrar'
-import { hashLabel } from '../src/hash'
+import { RSKRegistrar, hashLabel, AddrResolver } from '../src'
 import { generateSecret } from '../src/random'
-import { AddrResolver } from '../src'
 
 describe('rsk registrar', () => {
   test('constructor', async () => {

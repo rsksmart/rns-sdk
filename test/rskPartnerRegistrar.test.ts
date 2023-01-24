@@ -15,14 +15,15 @@ function commitAndRegister (partnerRegistrar: PartnerRegistrar, name: string, rn
   return commitAndRegistrarPromise
 }
 
-function getPartnerRegistrar (partnerAccountAddress: string, partnerRegistrarContract: Contract, rskOwnerContract: Contract, rifTokenContract: Contract, owner: Signer): PartnerRegistrar {
-  return new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, rskOwnerContract.address, rifTokenContract.address, owner)
+function getPartnerRegistrar (partnerAccountAddress: string, partnerRegistrarContract: Contract, partnerRenewerContract: Contract, rskOwnerContract: Contract, rifTokenContract: Contract, owner: Signer): PartnerRegistrar {
+  return new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContract.address, partnerRenewerContract.address, rskOwnerContract.address, rifTokenContract.address, owner)
 }
 
 describe('partner registrar', () => {
   test('constructor', async () => {
     const {
       partnerRegistrarContract,
+      partnerRenewerContract,
       partnerAccountAddress,
       rskOwnerContract,
       rifTokenContract
@@ -30,7 +31,7 @@ describe('partner registrar', () => {
       rnsOwner: owner
     } = await deployPartnerRegistrar()
 
-    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
     expect(partnerRegistrar.signer).toEqual(owner)
     expect(partnerRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
     expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract.address)
@@ -40,13 +41,14 @@ describe('partner registrar', () => {
   test('price', async () => {
     const {
       partnerRegistrarContract,
+      partnerRenewerContract,
       partnerAccountAddress,
       rskOwnerContract,
       rifTokenContract
       ,
       rnsOwner: owner
     } = await deployPartnerRegistrar()
-    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
     const duration = BigNumber.from(2)
     const name = 'cheta'
@@ -56,13 +58,13 @@ describe('partner registrar', () => {
   test('available', async () => {
     const {
       partnerRegistrarContract,
+      partnerRenewerContract,
       partnerAccountAddress,
       rskOwnerContract,
-      rifTokenContract
-      ,
+      rifTokenContract,
       rnsOwner: owner
     } = await deployPartnerRegistrar()
-    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
     const name = 'cheta'
     expect((await partnerRegistrar.available(name))).toBe(true)
@@ -71,6 +73,7 @@ describe('partner registrar', () => {
   test('ownerOf', async () => {
     const {
       partnerRegistrarContract,
+      partnerRenewerContract,
       partnerAccountAddress,
       rskOwnerContract,
       rifTokenContract,
@@ -80,7 +83,7 @@ describe('partner registrar', () => {
     } = await deployPartnerRegistrar({
       defaultMinCommitmentAge: 5
     })
-    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
     const name = 'cheta'
 
@@ -93,6 +96,7 @@ describe('partner registrar', () => {
     test('should commit and register', async () => {
       const {
         partnerRegistrarContract,
+        partnerRenewerContract,
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
@@ -104,7 +108,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge: 5
         }
       )
-      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
       const name = 'cheta'
 
@@ -117,6 +121,7 @@ describe('partner registrar', () => {
     test('should commit and register when min commitment age is not greater than 0', async () => {
       const {
         partnerRegistrarContract,
+        partnerRenewerContract,
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
@@ -126,7 +131,7 @@ describe('partner registrar', () => {
       } = await deployPartnerRegistrar(
 
       )
-      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
       const name = 'cheta'
 
@@ -139,6 +144,7 @@ describe('partner registrar', () => {
     test('should throw a cannot reveal error when time not moved', async () => {
       const {
         partnerRegistrarContract,
+        partnerRenewerContract,
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
@@ -150,7 +156,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge: 5
         }
       )
-      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
       const name = 'cheta'
 
@@ -167,6 +173,7 @@ describe('partner registrar', () => {
 
         const {
           partnerRegistrarContract,
+          partnerRenewerContract,
           partnerAccountAddress,
           rskOwnerContract,
           rifTokenContract,
@@ -178,7 +185,7 @@ describe('partner registrar', () => {
             defaultMinCommitmentAge
           }
         )
-        const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+        const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
         const name = 'cheta'
         const duration = BigNumber.from(2)
@@ -205,6 +212,7 @@ describe('partner registrar', () => {
 
         const {
           partnerRegistrarContract,
+          partnerRenewerContract,
           partnerAccountAddress,
           rskOwnerContract,
           rifTokenContract,
@@ -216,7 +224,7 @@ describe('partner registrar', () => {
             defaultMinCommitmentAge
           }
         )
-        const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+        const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
         const name = 'cheta'
         const duration = BigNumber.from(2)
@@ -240,6 +248,7 @@ describe('partner registrar', () => {
 
       const {
         partnerRegistrarContract,
+        partnerRenewerContract,
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
@@ -251,7 +260,7 @@ describe('partner registrar', () => {
           defaultMinCommitmentAge
         }
       )
-      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
       const name = 'cheta'
       const duration = BigNumber.from(2)
@@ -273,6 +282,7 @@ describe('partner registrar', () => {
 
         const {
           partnerRegistrarContract,
+          partnerRenewerContract,
           partnerAccountAddress,
           rskOwnerContract,
           rifTokenContract,
@@ -284,7 +294,7 @@ describe('partner registrar', () => {
             defaultMinCommitmentAge
           }
         )
-        const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+        const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
         const name = 'cheta'
         const duration = BigNumber.from(2)
@@ -304,6 +314,7 @@ describe('partner registrar', () => {
 
         const {
           partnerRegistrarContract,
+          partnerRenewerContract,
           partnerAccountAddress,
           rskOwnerContract,
           rifTokenContract,
@@ -315,7 +326,7 @@ describe('partner registrar', () => {
             defaultMinCommitmentAge
           }
         )
-        const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, rskOwnerContract, rifTokenContract, owner)
+        const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
         const name = 'cheta'
         const duration = BigNumber.from(2)
