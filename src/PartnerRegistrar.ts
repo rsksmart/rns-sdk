@@ -141,6 +141,12 @@ export class PartnerRegistrar {
     return true
   }
 
+  /**
+   * Renew an already purchased domain
+   * @param label the name to be renewed
+   * @param duration the duration to renew the name
+   * @param amount the amount for the name renewal
+   */
   async renew (label: string, duration: BigNumber, amount: BigNumber): Promise<boolean> {
     /* Encoding:
       | signature  |  4 bytes      - offset  0
