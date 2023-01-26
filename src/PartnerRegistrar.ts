@@ -16,6 +16,10 @@ const partnerRegistrarInterface = [
   'function commit(bytes32 commitment, address partner) external'
 ]
 
+const partnerRenewerInterface = [
+  'function renew(string calldata name, uint256 duration, address partner) external'
+]
+
 const erc677Interface = [
   'function transferAndCall(address to, uint256 value, bytes memory data) external returns (bool)'
 ]
@@ -23,18 +27,21 @@ const erc677Interface = [
 export class PartnerRegistrar {
   rskOwner: Contract
   partnerRegistrar: Contract
+  partnerRenewer: Contract
   rifToken: Contract
   signer: Signer
 
   constructor (
     private readonly partnerAddress: string,
     partnerRegistrarAddress: string,
+    partnerRenewerAddress: string,
     rskOwnerAddress: string,
     rifTokenAddress: string,
     signer: Signer
   ) {
     this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, signer)
     this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, signer)
+    this.partnerRenewer = new Contract(partnerRenewerAddress, partnerRenewerInterface, signer)
     this.rifToken = new Contract(rifTokenAddress, erc677Interface, signer)
     this.signer = signer
   }
@@ -129,7 +136,37 @@ export class PartnerRegistrar {
 
     const transaction = await this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data)
 
-    return transaction.wait()
+    await transaction.wait()
+
+    return true
+  }
+
+  /**
+   * Renew an already purchased domain
+   * @param label the name to be renewed
+   * @param duration the duration to renew the name
+   * @param amount the amount for the name renewal
+   */
+  async renew (label: string, duration: BigNumber, amount: BigNumber): Promise<boolean> {
+    /* Encoding:
+      | signature  |  4 bytes      - offset  0
+      | duration   | 32 bytes      - offset 4
+      | partner    | 20 bytes      - offset 36
+      | name       | variable size - offset 56
+  */
+
+    const _signature = '0x8d7016ca' // sha3("renew(string,uint,address)")
+    const _duration = utils.hexZeroPad(duration.toHexString(), 32).slice(2)
+    const _partner = this.partnerAddress.slice(2).toLowerCase()
+    const _name = Buffer.from(utils.toUtf8Bytes(label)).toString('hex')
+
+    const data = `${_signature}${_duration}${_partner}${_name}`
+
+    const transaction = await this.rifToken.transferAndCall(this.partnerRenewer.address, amount, data)
+
+    await transaction.wait()
+
+    return true
   }
 
   /**
