@@ -258,7 +258,8 @@ export class PartnerRegistrar {
    * @param partnerConfigurationAddress the address of the partner configuration contract
    * @param addr the address to set for the name resolution
    */
-  private commitAndRegisterOp (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string): OperationResult<boolean> {
+  private commitAndRegisterOp (...args: CommitAndRegisterArgs): OperationResult<boolean> {
+    const [label, owner, duration, amount, partnerConfigurationAddress, addr] = args
     const REVEAL_TIMEOUT_BUFFER = 30 * 1000 // 30 seconds (time to mine a block in RSK)
 
     let secret: string | undefined
