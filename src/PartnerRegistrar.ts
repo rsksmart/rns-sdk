@@ -134,13 +134,6 @@ export class PartnerRegistrar {
   }
 
   estimateGas <T extends AcceptedOperationNames> (operationName: T, ...args: AcceptedArgs<T>): Promise<BigNumber> {
-    const operations: Record<AcceptedOperationNames, AcceptedOperations> = {
-      commit: this.commitOp,
-      register: this.registerOp,
-      renew: this.renewOp,
-      commitAndRegister: this.commitAndRegisterOp
-    }
-
     switch (operationName) {
       case 'commit':
         return this.commitOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as string).estimateGas()
