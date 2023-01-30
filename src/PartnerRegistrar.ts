@@ -1,4 +1,4 @@
-import { Signer, Contract, BigNumber, utils, constants } from 'ethers'
+import { BigNumber, constants, Contract, ethers, Signer, utils } from 'ethers'
 import { hashLabel } from './hash'
 import { generateSecret } from './random'
 import { PartnerConfiguration } from './PartnerConfiguration'
@@ -23,6 +23,26 @@ const partnerRenewerInterface = [
 const erc677Interface = [
   'function transferAndCall(address to, uint256 value, bytes memory data) external returns (bool)'
 ]
+
+interface OperationResult<T> {
+  estimateGas: ()=> Promise<BigNumber>;
+  execute: ()=> Promise<T>
+}
+
+type CommitFunction = (label: string, owner: string, duration: BigNumber, addr?: string)=> OperationResult<{ secret: string; hash: string }>
+type RegisterFunction = (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string)=> OperationResult<boolean>
+type RenewFunction = (label: string, duration: BigNumber, amount: BigNumber)=> OperationResult<boolean>
+
+type CommitArgs = Parameters<CommitFunction>
+type RegisterArgs = Parameters<RegisterFunction>
+type RenewArgs = Parameters<RenewFunction>
+
+type AcceptedOperationNames = 'commit' | 'register' | 'renew'
+type AcceptedOperations = CommitFunction | RegisterFunction | RenewFunction
+
+type AcceptedArgs<T extends AcceptedOperationNames> = T extends 'commit' ? CommitArgs:
+  T extends 'register' ? RegisterArgs:
+    T extends 'renew' ? RenewArgs: never;
 
 export class PartnerRegistrar {
   rskOwner: Contract
@@ -71,6 +91,28 @@ export class PartnerRegistrar {
     return this.partnerRegistrar.price(label, constants.Zero, duration, this.partnerAddress)
   }
 
+  private commitOp (...args: CommitArgs): OperationResult<{ secret: string; hash: string }> {
+    const [label, owner, duration, addr] = args
+    const secret = generateSecret()
+    const hash = this.makeCommitment(label, owner, secret, duration, addr)
+    const params = [hash, this.partnerAddress]
+
+    return {
+      execute: async () => {
+        const makeCommitmentTransaction = await this.partnerRegistrar.commit(...params)
+        await makeCommitmentTransaction.wait()
+
+        return {
+          secret,
+          hash
+        }
+      },
+      estimateGas: () => {
+        return this.partnerRegistrar.estimateGas.commit(...params)
+      }
+    }
+  }
+
   /**
    * @typedef CommitmentResult
    * @property secret - The secret used to create the commitment
@@ -84,16 +126,25 @@ export class PartnerRegistrar {
    * @param addr the address to set for the name resolution
    * @returns {CommitmentResult} the result of the commitment
    */
-  async commit (label: string, owner: string, duration: BigNumber, addr?: string): Promise<{ secret: string, hash: string }> {
-    const secret = generateSecret()
-    const hash = await this.partnerRegistrar.makeCommitment(hashLabel(label), owner, secret, duration, addr ?? owner)
-    const makeCommitmentTransaction = await this.partnerRegistrar.commit(hash, this.partnerAddress)
-    await makeCommitmentTransaction.wait()
+  commit (label: string, owner: string, duration: BigNumber, addr?: string): Promise<{ secret: string; hash: string }> {
+    return this.commitOp(label, owner, duration, addr).execute()
+  }
 
-    return {
-      secret,
-      hash
+  estimateGas <T extends AcceptedOperationNames> (operationName: T, ...args: AcceptedArgs<T>): Promise<BigNumber> {
+    const operations: Record<AcceptedOperationNames, AcceptedOperations> = {
+      commit: this.commitOp,
+      register: this.registerOp,
+      renew: this.renewOp
     }
+
+    const operation = operations[operationName]
+
+    return operation(...args).estimateGas()
+  }
+
+  private makeCommitment (label: string, owner: string, secret: string, duration: BigNumber, addr: string | undefined): string {
+    // return await this.partnerRegistrar.makeCommitment(hashLabel(label), owner, secret, duration, addr ?? owner)
+    return ethers.utils.solidityKeccak256(['bytes32', 'address', 'bytes32', 'uint256', 'address'], [hashLabel(label), owner, secret, duration, addr ?? owner])
   }
 
   /**
@@ -113,7 +164,7 @@ export class PartnerRegistrar {
    * @param amount the amount for the name registration
    * @param addr the address to set for the name resolution
    */
-  async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<boolean> {
+  registerOp (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<boolean> {
     /* Encoding:
       | signature  |  4 bytes      - offset  0
       | owner      | 20 bytes      - offset  4
@@ -134,11 +185,20 @@ export class PartnerRegistrar {
 
     const data = `${_signature}${_owner}${_secret}${_duration}${_addr}${_partner}${_name}`
 
-    const transaction = await this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data)
+    return {
+      execute: async () => {
+        const transaction = await this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data)
+        await transaction.wait()
+        return true
+      },
+      estimateGas: () => {
+        return this.rifToken.estimateGas.transferAndCall(this.partnerRegistrar.address, amount, data)
+      }
+    }
+  }
 
-    await transaction.wait()
-
-    return true
+  register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<boolean> {
+    return this.registerOp(label, owner, secret, duration, amount, addr).execute()
   }
 
   /**
@@ -147,7 +207,11 @@ export class PartnerRegistrar {
    * @param duration the duration to renew the name
    * @param amount the amount for the name renewal
    */
-  async renew (label: string, duration: BigNumber, amount: BigNumber): Promise<boolean> {
+  renew (label: string, duration: BigNumber, amount: BigNumber): Promise<boolean> {
+    return this.renewOp(label, duration, amount).execute()
+  }
+
+  renewOp (label: string, duration: BigNumber, amount: BigNumber): OperationResult<boolean> {
     /* Encoding:
       | signature  |  4 bytes      - offset  0
       | duration   | 32 bytes      - offset 4
@@ -162,11 +226,16 @@ export class PartnerRegistrar {
 
     const data = `${_signature}${_duration}${_partner}${_name}`
 
-    const transaction = await this.rifToken.transferAndCall(this.partnerRenewer.address, amount, data)
-
-    await transaction.wait()
-
-    return true
+    return {
+      execute: async () => {
+        const transaction = await this.rifToken.transferAndCall(this.partnerRenewer.address, amount, data)
+        await transaction.wait()
+        return true
+      },
+      estimateGas: () => {
+        return this.rifToken.estimateGas.transferAndCall(this.partnerRenewer.address, amount, data)
+      }
+    }
   }
 
   /**
