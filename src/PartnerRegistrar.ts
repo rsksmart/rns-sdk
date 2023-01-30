@@ -40,11 +40,10 @@ type RenewArgs = Parameters<RenewFunction>
 type CommitAndRegisterArgs = Parameters<CommitAndRegisterFunction>
 
 type AcceptedOperationNames = 'commit' | 'register' | 'renew' | 'commitAndRegister'
-type AcceptedOperations = CommitFunction | RegisterFunction | RenewFunction | CommitAndRegisterFunction
 
 type AcceptedArgs<T extends AcceptedOperationNames> = T extends 'commit' ? CommitArgs:
   T extends 'register' ? RegisterArgs:
-    T extends 'renew' ? RenewArgs: 
+    T extends 'renew' ? RenewArgs:
       T extends 'commitAndRegister' ? CommitAndRegisterArgs: never;
 
 export class PartnerRegistrar {
@@ -137,17 +136,17 @@ export class PartnerRegistrar {
     switch (operationName) {
       case 'commit':
         return this.commitOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as string).estimateGas()
-      
+
       case 'register':
         return this.registerOp(args[0], args[1] as string, args[2] as string, args[3] as BigNumber, args[4] as BigNumber, args[5] as string).estimateGas()
-      
+
       case 'renew':
         return this.renewOp(args[0], args[1] as BigNumber, args[2] as BigNumber).estimateGas()
-      
+
       case 'commitAndRegister':
         return this.commitAndRegisterOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as BigNumber, args[4] as string, args[5] as string).estimateGas()
       default:
-        return this.commitOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as string).estimateGas();
+        return this.commitOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as string).estimateGas()
     }
   }
 
@@ -229,7 +228,7 @@ export class PartnerRegistrar {
       | name       | variable size - offset 56
   */
 
-    const [label, duration, amount] = args;
+    const [label, duration, amount] = args
     const _signature = '0x8d7016ca' // sha3("renew(string,uint,address)")
     const _duration = utils.hexZeroPad(duration.toHexString(), 32).slice(2)
     const _partner = this.partnerAddress.slice(2).toLowerCase()
@@ -295,12 +294,12 @@ export class PartnerRegistrar {
         secret = generateSecret()
         const estimateCommit = await this.commitOp(label, owner, duration, addr).estimateGas()
         const estimateRegister = await this.registerOp(label, owner, secret, duration, amount, addr).estimateGas()
-        return  estimateCommit.add(estimateRegister)
+        return estimateCommit.add(estimateRegister)
       }
     }
   }
 
   commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string): Promise<boolean> {
-   return this.commitAndRegisterOp(label, owner, duration, amount, partnerConfigurationAddress, addr).execute()
+    return this.commitAndRegisterOp(label, owner, duration, amount, partnerConfigurationAddress, addr).execute()
   }
 }
