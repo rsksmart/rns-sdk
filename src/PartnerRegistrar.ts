@@ -146,7 +146,7 @@ export class PartnerRegistrar {
       case 'commitAndRegister':
         return this.commitAndRegisterOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as BigNumber, args[4] as string, args[5] as string).estimateGas()
       default:
-        return this.commitOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as string).estimateGas()
+        throw new Error('Invalid operation name')
     }
   }
 
