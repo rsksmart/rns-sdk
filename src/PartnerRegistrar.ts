@@ -93,8 +93,7 @@ export class PartnerRegistrar {
     return this.partnerRegistrar.price(label, constants.Zero, duration, this.partnerAddress)
   }
 
-  private commitOp (...args: CommitArgs): OperationResult<{ secret: string; hash: string }> {
-    const [label, owner, duration, addr] = args
+  private commitOp (label: string, owner: string, duration: BigNumber, addr?: string): OperationResult<{ secret: string; hash: string }> {
     const secret = generateSecret()
     const hash = this.makeCommitment(label, owner, secret, duration, addr)
     const params = [hash, this.partnerAddress]
@@ -132,6 +131,12 @@ export class PartnerRegistrar {
     return this.commitOp(label, owner, duration, addr).execute()
   }
 
+  /**
+   * Estimate gas cost for an operation
+   * @param operationName the operation to estimate gas for
+   * @param args the arguments for the operation
+   * @returns the estimated gas cost for the operation
+   */
   estimateGas <T extends AcceptedOperationNames> (operationName: T, ...args: AcceptedArgs<T>): Promise<BigNumber> {
     switch (operationName) {
       case 'commit':
@@ -151,7 +156,6 @@ export class PartnerRegistrar {
   }
 
   private makeCommitment (label: string, owner: string, secret: string, duration: BigNumber, addr: string | undefined): string {
-    // return await this.partnerRegistrar.makeCommitment(hashLabel(label), owner, secret, duration, addr ?? owner)
     return ethers.utils.solidityKeccak256(['bytes32', 'address', 'bytes32', 'uint256', 'address'], [hashLabel(label), owner, secret, duration, addr ?? owner])
   }
 
@@ -172,7 +176,7 @@ export class PartnerRegistrar {
    * @param amount the amount for the name registration
    * @param addr the address to set for the name resolution
    */
-  registerOp (...args: RegisterArgs): OperationResult<boolean> {
+  private registerOp (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<boolean> {
     /* Encoding:
       | signature  |  4 bytes      - offset  0
       | owner      | 20 bytes      - offset  4
@@ -183,7 +187,6 @@ export class PartnerRegistrar {
       | name       | variable size - offset 128
   */
 
-    const [label, owner, secret, duration, amount, addr] = args
     const _signature = '0x646c3681' // sha3("register(string,address,bytes32,uint,address,address)")
     const _owner = owner.slice(2).toLowerCase()
     const _secret = secret.slice(2)
@@ -220,7 +223,7 @@ export class PartnerRegistrar {
     return this.renewOp(label, duration, amount).execute()
   }
 
-  renewOp (...args: RenewArgs): OperationResult<boolean> {
+  renewOp (label: string, duration: BigNumber, amount: BigNumber): OperationResult<boolean> {
     /* Encoding:
       | signature  |  4 bytes      - offset  0
       | duration   | 32 bytes      - offset 4
@@ -228,7 +231,6 @@ export class PartnerRegistrar {
       | name       | variable size - offset 56
   */
 
-    const [label, duration, amount] = args
     const _signature = '0x8d7016ca' // sha3("renew(string,uint,address)")
     const _duration = utils.hexZeroPad(duration.toHexString(), 32).slice(2)
     const _partner = this.partnerAddress.slice(2).toLowerCase()
@@ -257,8 +259,7 @@ export class PartnerRegistrar {
    * @param partnerConfigurationAddress the address of the partner configuration contract
    * @param addr the address to set for the name resolution
    */
-  private commitAndRegisterOp (...args: CommitAndRegisterArgs): OperationResult<boolean> {
-    const [label, owner, duration, amount, partnerConfigurationAddress, addr] = args
+  private commitAndRegisterOp (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string): OperationResult<boolean> {
     const REVEAL_TIMEOUT_BUFFER = 30 * 1000 // 30 seconds (time to mine a block in RSK)
 
     let secret: string | undefined
