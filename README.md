@@ -40,10 +40,12 @@
 
 ## Usage
 
-The library supports 3 modules:
+The library supports the following modules:
 - .rsk domains registrations using `RSKRegistrar`
+- .rsk domain registrations using the new partner registrar contracts `PartnerRegistrar`
 - RNS domains admin using `RNS`
 - Domain address resolution using `AddrResolver`
+- Information on a partner configuration using `PartnerConfiguration`
 
 You will need to use this addresses to initialize the library:
 
@@ -58,6 +60,7 @@ You will need to use this addresses to initialize the library:
 
 ### .rsk domain registrations
 
+#### 1. Using the RSKRegistrar
 You can register .rsk domains paying with RIF Tokens. First, create the instance of `RSKRegistrar`
 
 ```typescript
@@ -103,6 +106,44 @@ const registerTx = await rskRegistrar.register(
 )
 
 await registerTx.wait()
+```
+
+#### 2. Using the PartnerRegistrar
+
+You can use the PartnerRegistrar to register domains using the partner registrar contracts. First, create the instance of `PartnerRegistrar`.
+> The PartnerRegistrar supports one click register even where commitment is required.
+
+```typescript
+import { Signer } from 'ethers'
+import { PartnerRegistrar } from '@rsksmart/rns-sdk'
+
+let signer: Signer
+const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContractAddress, partnerRenewerContractAddress, rskOwnerContractAddress, rifTokenContractAddress, signer);
+```
+
+- Query price and availability
+
+```typescript
+const label = 'taringa'
+
+const available = await partnerRegistrar.available(label)
+
+const duration = BigNumber.from('1')
+
+const price = await partnerRegistrar.price(label, duration)
+```
+
+- Register the domain
+
+```typescript
+const label = 'taringa'
+const duration = BigNumber.from('1')
+const ownerAddress = '0x...' //address of the owner of the domain
+
+const price = await partnerRegistrar.price(label, duration)
+const partnerConfigurationAddress = '0x...' //address of the partner configuration contract
+
+await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price, partnerConfigurationAddress)
 ```
 
 ### Domain management
@@ -181,6 +222,31 @@ await tx.wait()
 
 const addr = await addrResolver.addr(domain)
 ```
+
+### Partner Configuration
+We have also provided a class for interacting with the partner configuration contract
+    
+```typescript
+import { Signer } from 'ethers'
+import { PartnerConfiguration } from '@rsksmart/rns-sdk'
+  
+let signer: Signer
+const partnerConfigurationAddress = '0x...' //address of the partner configuration contract
+
+const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, signer)
+```
+
+Available operations:
+- getMinLength
+- getMaxLength
+- getUnicodeSupport
+- getMinDuration
+- getMaxDuration
+- getMinCommitmentAge
+- getFeePercentage
+- getDiscount
+- getPrice
+- validateName
 
 ## Run for development
 
