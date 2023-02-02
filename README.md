@@ -238,15 +238,49 @@ const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddres
 
 Available operations:
 - getMinLength
+```typescript
+    const minLength = await partnerConfiguration.getMinLength()
+```
 - getMaxLength
+```typescript
+    const maxLength = await partnerConfiguration.getMaxLength()
+```
 - getUnicodeSupport
+```typescript
+    const unicodeSupport = await partnerConfiguration.getUnicodeSupport()
+```
 - getMinDuration
+```typescript
+    const minDuration = await partnerConfiguration.getMinDuration()
+```
 - getMaxDuration
+```typescript
+    const maxDuration = await partnerConfiguration.getMaxDuration()
+```
 - getMinCommitmentAge
+> This is the minimum time that needs to pass before a commitment can be revealed
+```typescript
+    const minCommitmentAge = await partnerConfiguration.getMinCommitmentAge()
+```
 - getFeePercentage
+> This is the percentage of the domain price that will be charged as a fee
+```typescript
+    const feePercentage = await partnerConfiguration.getFeePercentage()
+```
 - getDiscount
+> This is the percentage of the domain price that will be discounted for the partner
+```typescript
+    const discount = await partnerConfiguration.getDiscount()
+```
 - getPrice
+```typescript
+    const price = await partnerConfiguration.getPrice(label, duration)
+```
 - validateName
+> This function will resolve if the name is valid
+```typescript
+    const valid = await partnerConfiguration.validateName(label, duration)
+```
 
 ## Run for development
 
