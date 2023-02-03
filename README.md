@@ -55,6 +55,8 @@ You will need to use this addresses to initialize the library:
 | RIF Token ERC-677 ERC-20 (`rifTokenAddress`) | [`0x2acc95758f8b5f583470ba265eb685a8f45fc9d5`](https://explorer.rsk.co/address/0x2acc95758f8b5f583470ba265eb685a8f45fc9d5) | [`0x19f64674d8a5b4e652319f5e239efd3bc969a1fe`](https://explorer.testnet.rsk.co/address/0x19f64674d8a5b4e652319f5e239efd3bc969a1fe) |
 | ERC-721 .rsk domains token (`rskOwnerAddress`) | [`0x45d3e4fb311982a06ba52359d44cb4f5980e0ef1`](https://explorer.rsk.co/address/0x45d3e4fb311982a06ba52359d44cb4f5980e0ef1) | [`0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71`](https://explorer.testnet.rsk.co/address/0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71) |
 | .rsk domains registrar (`fifsAddrRegistrarAddress`) | [`0xd9c79ced86ecf49f5e4a973594634c83197c35ab`](https://explorer.rsk.co/address/0xd9c79ced86ecf49f5e4a973594634c83197c35ab) | [`0x90734bd6bf96250a7b262e2bc34284b0d47c1e8d`](https://explorer.testnet.rsk.co/address/0x90734bd6bf96250a7b262e2bc34284b0d47c1e8d) |
+| .rsk domains partner registrar (`partnerRegistrarContractAddress`) | - | [`0x8104d97f6d82a7d3afbf45f72118fad51f190c42`](https://explorer.testnet.rsk.co/address/0x8104d97f6d82a7d3afbf45f72118fad51f190c42) |
+| .rsk domains partner registrar (`partnerRegistrarContractAddress`) | - | [`0x8104d97f6d82a7d3afbf45f72118fad51f190c42`](https://explorer.testnet.rsk.co/address/0x8104d97f6d82a7d3afbf45f72118fad51f190c42) |
 
 > See also RNS Resolver library [`@rsksmart/rns-resolver.js`](https://github.com/rsksmart/rns-resolver.js) to resolve domains following the standard protocol
 
@@ -281,6 +283,9 @@ Available operations:
 ```typescript
     const valid = await partnerConfiguration.validateName(label, duration)
 ```
+
+### List of Partners and addresses
+Coming soon
 
 ## Run for development
 
