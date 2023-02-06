@@ -148,6 +148,17 @@ const partnerConfigurationAddress = '0x...' //address of the partner configurati
 await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price, partnerConfigurationAddress)
 ```
 
+- Renew the domain
+
+```typescript
+const label = 'taringa'
+const duration = BigNumber.from('1')
+
+const price = await partnerRegistrar.price(label, duration)
+
+await partnerRegistrar.renew(label, duration, price)
+```
+
 ### Domain management
 
 Create `RNS` instance
