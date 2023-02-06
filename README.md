@@ -235,6 +235,41 @@ await tx.wait()
 
 const addr = await addrResolver.addr(domain)
 ```
+## Troubleshooting
+1. Browser
+> The library uses a dependency that requires Buffer to be available globally. If you are using in a browser environment, you need to the following:
+
+- Install the dependency:
+`npm install -D buffer`
+
+- Add the following to your webpack config:
+```javascript
+const webpackConfig = {
+    resolve: {
+        fallback: {
+            buffer: require.resolve('buffer/'),
+        },
+    },
+    plugins: [
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
+    ],
+};
+```
+
+OR
+
+```javascript
+window.Buffer = window.Buffer || require('buffer/').Buffer;
+```
+
+2. React Native
+> You can use the `rn-nodeify` package
+
+```
+rn-nodeify --install buffer -hack --yarn && patch-package
+```
 
 ### Partner Configuration
 We have also provided a class for interacting with the partner configuration contract
