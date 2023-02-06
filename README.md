@@ -182,7 +182,8 @@ await tx.wait()
 const addr = await addrResolver.addr(domain)
 ```
 ## Troubleshooting
-The library uses a dependency that requires Buffer to be available globally. If you are using in a browser environment, you need to the following:
+1. Browser
+> The library uses a dependency that requires Buffer to be available globally. If you are using in a browser environment, you need to the following:
 
 - Install the dependency:
 `npm install -D buffer`
@@ -207,6 +208,13 @@ OR
 
 ```javascript
 window.Buffer = window.Buffer || require('buffer/').Buffer;
+```
+
+2. React Native
+> You can use the `rn-nodeify` package
+
+```
+rn-nodeify --install buffer -hack --yarn && patch-package
 ```
 
 ## Run for development
