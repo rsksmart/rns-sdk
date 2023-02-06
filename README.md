@@ -40,10 +40,12 @@
 
 ## Usage
 
-The library supports 3 modules:
+The library supports the following modules:
 - .rsk domains registrations using `RSKRegistrar`
+- .rsk domain registrations using the new partner registrar contracts `PartnerRegistrar`
 - RNS domains admin using `RNS`
 - Domain address resolution using `AddrResolver`
+- Information on a partner configuration using `PartnerConfiguration`
 
 You will need to use this addresses to initialize the library:
 
@@ -53,11 +55,14 @@ You will need to use this addresses to initialize the library:
 | RIF Token ERC-677 ERC-20 (`rifTokenAddress`) | [`0x2acc95758f8b5f583470ba265eb685a8f45fc9d5`](https://explorer.rsk.co/address/0x2acc95758f8b5f583470ba265eb685a8f45fc9d5) | [`0x19f64674d8a5b4e652319f5e239efd3bc969a1fe`](https://explorer.testnet.rsk.co/address/0x19f64674d8a5b4e652319f5e239efd3bc969a1fe) |
 | ERC-721 .rsk domains token (`rskOwnerAddress`) | [`0x45d3e4fb311982a06ba52359d44cb4f5980e0ef1`](https://explorer.rsk.co/address/0x45d3e4fb311982a06ba52359d44cb4f5980e0ef1) | [`0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71`](https://explorer.testnet.rsk.co/address/0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71) |
 | .rsk domains registrar (`fifsAddrRegistrarAddress`) | [`0xd9c79ced86ecf49f5e4a973594634c83197c35ab`](https://explorer.rsk.co/address/0xd9c79ced86ecf49f5e4a973594634c83197c35ab) | [`0x90734bd6bf96250a7b262e2bc34284b0d47c1e8d`](https://explorer.testnet.rsk.co/address/0x90734bd6bf96250a7b262e2bc34284b0d47c1e8d) |
+| .rsk domains partner registrar (`partnerRegistrarContractAddress`) | - | [`0x8104d97f6d82a7d3afbf45f72118fad51f190c42`](https://explorer.testnet.rsk.co/address/0x8104d97f6d82a7d3afbf45f72118fad51f190c42) |
+| .rsk domains partner registrar (`partnerRegistrarContractAddress`) | - | [`0x8104d97f6d82a7d3afbf45f72118fad51f190c42`](https://explorer.testnet.rsk.co/address/0x8104d97f6d82a7d3afbf45f72118fad51f190c42) |
 
 > See also RNS Resolver library [`@rsksmart/rns-resolver.js`](https://github.com/rsksmart/rns-resolver.js) to resolve domains following the standard protocol
 
 ### .rsk domain registrations
 
+#### 1. Using the RSKRegistrar
 You can register .rsk domains paying with RIF Tokens. First, create the instance of `RSKRegistrar`
 
 ```typescript
@@ -103,6 +108,55 @@ const registerTx = await rskRegistrar.register(
 )
 
 await registerTx.wait()
+```
+
+#### 2. Using the PartnerRegistrar
+
+You can use the PartnerRegistrar to register domains using the partner registrar contracts. First, create the instance of `PartnerRegistrar`.
+> The PartnerRegistrar supports one click register even where commitment is required.
+
+```typescript
+import { Signer } from 'ethers'
+import { PartnerRegistrar } from '@rsksmart/rns-sdk'
+
+let signer: Signer
+const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContractAddress, partnerRenewerContractAddress, rskOwnerContractAddress, rifTokenContractAddress, signer);
+```
+
+- Query price and availability
+
+```typescript
+const label = 'taringa'
+
+const available = await partnerRegistrar.available(label)
+
+const duration = BigNumber.from('1')
+
+const price = await partnerRegistrar.price(label, duration)
+```
+
+- Register the domain
+
+```typescript
+const label = 'taringa'
+const duration = BigNumber.from('1')
+const ownerAddress = '0x...' //address of the owner of the domain
+
+const price = await partnerRegistrar.price(label, duration)
+const partnerConfigurationAddress = '0x...' //address of the partner configuration contract
+
+await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price, partnerConfigurationAddress)
+```
+
+- Renew the domain
+
+```typescript
+const label = 'taringa'
+const duration = BigNumber.from('1')
+
+const price = await partnerRegistrar.price(label, duration)
+
+await partnerRegistrar.renew(label, duration, price)
 ```
 
 ### Domain management
@@ -181,6 +235,68 @@ await tx.wait()
 
 const addr = await addrResolver.addr(domain)
 ```
+
+### Partner Configuration
+We have also provided a class for interacting with the partner configuration contract
+    
+```typescript
+import { Signer } from 'ethers'
+import { PartnerConfiguration } from '@rsksmart/rns-sdk'
+  
+let signer: Signer
+const partnerConfigurationAddress = '0x...' //address of the partner configuration contract
+
+const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, signer)
+```
+
+Available operations:
+- getMinLength
+```typescript
+    const minLength = await partnerConfiguration.getMinLength()
+```
+- getMaxLength
+```typescript
+    const maxLength = await partnerConfiguration.getMaxLength()
+```
+- getUnicodeSupport
+```typescript
+    const unicodeSupport = await partnerConfiguration.getUnicodeSupport()
+```
+- getMinDuration
+```typescript
+    const minDuration = await partnerConfiguration.getMinDuration()
+```
+- getMaxDuration
+```typescript
+    const maxDuration = await partnerConfiguration.getMaxDuration()
+```
+- getMinCommitmentAge
+> This is the minimum time that needs to pass before a commitment can be revealed
+```typescript
+    const minCommitmentAge = await partnerConfiguration.getMinCommitmentAge()
+```
+- getFeePercentage
+> This is the percentage of the domain price that will be charged as a fee
+```typescript
+    const feePercentage = await partnerConfiguration.getFeePercentage()
+```
+- getDiscount
+> This is the percentage of the domain price that will be discounted for the partner
+```typescript
+    const discount = await partnerConfiguration.getDiscount()
+```
+- getPrice
+```typescript
+    const price = await partnerConfiguration.getPrice(label, duration)
+```
+- validateName
+> This function will resolve if the name is valid
+```typescript
+    const valid = await partnerConfiguration.validateName(label, duration)
+```
+
+### List of Partners and addresses
+Coming soon
 
 ## Run for development
 

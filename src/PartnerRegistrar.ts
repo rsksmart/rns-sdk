@@ -300,6 +300,15 @@ export class PartnerRegistrar {
     }
   }
 
+  /**
+   * Register a domain
+   * @param label the name to register
+   * @param owner the owner of the name
+   * @param duration the duration to register the name
+   * @param amount the amount for the name registration
+   * @param partnerConfigurationAddress the partner configuration contract address
+   * @param addr the address to set for the name resolution
+   */
   commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string): Promise<boolean> {
     return this.commitAndRegisterOp(label, owner, duration, amount, partnerConfigurationAddress, addr).execute()
   }
