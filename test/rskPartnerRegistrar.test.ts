@@ -26,8 +26,7 @@ describe('partner registrar', () => {
       partnerRenewerContract,
       partnerAccountAddress,
       rskOwnerContract,
-      rifTokenContract
-      ,
+      rifTokenContract,
       rnsOwner: owner
     } = await deployPartnerRegistrar()
 
@@ -126,9 +125,7 @@ describe('partner registrar', () => {
         rifTokenContract,
         rnsOwnerAddress,
         rnsOwner: owner
-      } = await deployPartnerRegistrar(
-
-      )
+      } = await deployPartnerRegistrar()
       const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
       const name = 'cheta'
