@@ -7,8 +7,8 @@ import {
 import { BigNumber, Contract, providers, Signer } from 'ethers'
 import { generateSecret } from '../src/random'
 
-function commitAndRegister (partnerRegistrar: PartnerRegistrar, name: string, rnsOwnerAddress: string, partnerConfigurationContract: Contract) {
-  const commitAndRegistrarPromise = partnerRegistrar.commitAndRegister(name, rnsOwnerAddress, BigNumber.from(2), toWei('4'), partnerConfigurationContract.address, rnsOwnerAddress)
+function commitAndRegister (partnerRegistrar: PartnerRegistrar, name: string, rnsOwnerAddress: string) {
+  const commitAndRegistrarPromise = partnerRegistrar.commitAndRegister(name, rnsOwnerAddress, BigNumber.from(2), toWei('4'), rnsOwnerAddress)
   setTimeout(async () => {
     await timeTravel(new providers.JsonRpcProvider(rpcUrl), 20)
   }, 500)
@@ -78,7 +78,6 @@ describe('partner registrar', () => {
       partnerAccountAddress,
       rskOwnerContract,
       rifTokenContract,
-      partnerConfigurationContract,
       rnsOwnerAddress,
       rnsOwner: owner
     } = await deployPartnerRegistrar({
@@ -88,7 +87,7 @@ describe('partner registrar', () => {
 
     const name = 'cheta'
 
-    await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract)
+    await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
     expect((await partnerRegistrar.ownerOf(name))).toEqual(rnsOwnerAddress)
   }, 3000000)
@@ -101,7 +100,6 @@ describe('partner registrar', () => {
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
-        partnerConfigurationContract,
         rnsOwnerAddress,
         rnsOwner: owner
       } = await deployPartnerRegistrar(
@@ -114,7 +112,7 @@ describe('partner registrar', () => {
       const name = 'cheta'
 
       expect((await partnerRegistrar.available(name))).toEqual(true)
-      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract)
+      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
       expect((await partnerRegistrar.available(name))).toEqual(false)
     }, 3000000)
@@ -126,7 +124,6 @@ describe('partner registrar', () => {
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
-        partnerConfigurationContract,
         rnsOwnerAddress,
         rnsOwner: owner
       } = await deployPartnerRegistrar(
@@ -137,7 +134,7 @@ describe('partner registrar', () => {
       const name = 'cheta'
 
       expect((await partnerRegistrar.available(name))).toEqual(true)
-      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract)
+      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
       expect((await partnerRegistrar.available(name))).toEqual(false)
     }, 3000000)
@@ -149,7 +146,6 @@ describe('partner registrar', () => {
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
-        partnerConfigurationContract,
         rnsOwnerAddress,
         rnsOwner: owner
       } = await deployPartnerRegistrar(
@@ -163,7 +159,7 @@ describe('partner registrar', () => {
 
       expect(await partnerRegistrar.available(name)).toEqual(true)
 
-      await expect(partnerRegistrar.commitAndRegister(name, rnsOwnerAddress, BigNumber.from(2), toWei('4'), partnerConfigurationContract.address, rnsOwnerAddress))
+      await expect(partnerRegistrar.commitAndRegister(name, rnsOwnerAddress, BigNumber.from(2), toWei('4'), rnsOwnerAddress))
         .rejects
         .toThrow('Cannot register because the commitment cannot be revealed')
     }, 300000)
@@ -353,7 +349,6 @@ describe('partner registrar', () => {
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
-        partnerConfigurationContract,
         rnsOwnerAddress,
         rnsOwner: owner
       } = await deployPartnerRegistrar(
@@ -364,7 +359,7 @@ describe('partner registrar', () => {
       const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
 
       const name = 'cheta'
-      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract)
+      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
       expect(await partnerRegistrar.renew(name, BigNumber.from(2), toWei('4'))).toBe(true)
     }, 3000000)

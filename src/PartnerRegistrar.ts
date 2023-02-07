@@ -13,7 +13,12 @@ const partnerRegistrarInterface = [
   'function price(string calldata name, uint256 expires, uint256 duration, address partner) external view returns (uint256)',
   'function makeCommitment(bytes32 label, address nameOwner, bytes32 secret, uint256 duration, address addr) external pure returns (bytes32)',
   'function canReveal(bytes32 commitment) external view returns (bool)',
-  'function commit(bytes32 commitment, address partner) external'
+  'function commit(bytes32 commitment, address partner) external',
+  'function _partnerManager() external view returns (address)'
+]
+
+const partnerManagerInterface = [
+  'function getPartnerConfiguration(address partner) external view returns (address)'
 ]
 
 const partnerRenewerInterface = [
@@ -149,7 +154,7 @@ export class PartnerRegistrar {
         return this.renewOp(args[0], args[1] as BigNumber, args[2] as BigNumber).estimateGas()
 
       case 'commitAndRegister':
-        return this.commitAndRegisterOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as BigNumber, args[4] as string, args[5] as string).estimateGas()
+        return this.commitAndRegisterOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as BigNumber, args[4] as string).estimateGas()
       default:
         throw new Error('Invalid operation name')
     }
@@ -256,18 +261,19 @@ export class PartnerRegistrar {
    * @param owner the owner of the name
    * @param duration the duration to register the name
    * @param amount the amount for the name registration
-   * @param partnerConfigurationAddress the address of the partner configuration contract
    * @param addr the address to set for the name resolution
    */
-  private commitAndRegisterOp (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string): OperationResult<boolean> {
+  private commitAndRegisterOp (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<boolean> {
     const REVEAL_TIMEOUT_BUFFER = 30 * 1000 // 30 seconds (time to mine a block in RSK)
 
     let secret: string | undefined
 
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, this.signer)
-
     return {
       execute: async () => {
+        const partnerManager = await this.getPartnerManager()
+        const partnerConfigurationAddress = await partnerManager.getPartnerConfiguration(this.partnerAddress)
+        const partnerConfiguration = new PartnerConfiguration(partnerConfigurationAddress, this.signer)
+
         const minCommitmentAge = await partnerConfiguration.getMinCommitmentAge()
 
         // run commitment if commitment is required
@@ -300,16 +306,20 @@ export class PartnerRegistrar {
     }
   }
 
+  private async getPartnerManager (): Promise<Contract> {
+    const partnerManagerAddress = await this.partnerRegistrar._partnerManager()
+    return new Contract(partnerManagerAddress, partnerManagerInterface, this.signer)
+  }
+
   /**
    * Register a domain
    * @param label the name to register
    * @param owner the owner of the name
    * @param duration the duration to register the name
    * @param amount the amount for the name registration
-   * @param partnerConfigurationAddress the partner configuration contract address
    * @param addr the address to set for the name resolution
    */
-  commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string): Promise<boolean> {
-    return this.commitAndRegisterOp(label, owner, duration, amount, partnerConfigurationAddress, addr).execute()
+  commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<boolean> {
+    return this.commitAndRegisterOp(label, owner, duration, amount, addr).execute()
   }
 }
