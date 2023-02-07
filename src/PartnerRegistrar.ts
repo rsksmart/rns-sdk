@@ -313,8 +313,11 @@ export class PartnerRegistrar {
         return this.registerOp(label, owner, secret, duration, amount, addr).execute()
       },
       estimateGas: async () => {
-        secret = generateSecret()
+        
         const estimateCommit = await this.commitOp(label, owner, duration, addr).estimateGas()
+        const commitResult = await this.commit(label, owner, duration, addr)
+
+        secret = commitResult.secret
         const estimateRegister = await this.registerOp(label, owner, secret, duration, amount, addr).estimateGas()
         return estimateCommit.add(estimateRegister)
       }
