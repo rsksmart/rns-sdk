@@ -44,8 +44,7 @@ describe('partner registrar', () => {
       partnerRenewerContract,
       partnerAccountAddress,
       rskOwnerContract,
-      rifTokenContract
-      ,
+      rifTokenContract,
       rnsOwner: owner
     } = await deployPartnerRegistrar()
     const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
