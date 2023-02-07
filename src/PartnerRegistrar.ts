@@ -14,7 +14,7 @@ const partnerRegistrarInterface = [
   'function makeCommitment(bytes32 label, address nameOwner, bytes32 secret, uint256 duration, address addr) external pure returns (bytes32)',
   'function canReveal(bytes32 commitment) external view returns (bool)',
   'function commit(bytes32 commitment, address partner) external',
-  'function _partnerManager() external view returns (address)'
+  'function partnerManager() external view returns (address)'
 ]
 
 const partnerManagerInterface = [
@@ -311,7 +311,7 @@ export class PartnerRegistrar {
   }
 
   private async getPartnerManagerContract (): Promise<Contract> {
-    const partnerManagerAddress = await this.partnerRegistrar._partnerManager()
+    const partnerManagerAddress = await this.partnerRegistrar.partnerManager()
     return new Contract(partnerManagerAddress, partnerManagerInterface, this.signer)
   }
 
