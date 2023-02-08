@@ -369,7 +369,6 @@ describe('partner registrar', () => {
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
-        partnerConfigurationContract,
         rnsOwnerAddress,
         rnsOwner: owner
       } = await deployPartnerRegistrar(
@@ -394,7 +393,6 @@ describe('partner registrar', () => {
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
-        partnerConfigurationContract,
         rnsOwnerAddress,
         rnsOwner: owner
       } = await deployPartnerRegistrar(
@@ -406,7 +404,7 @@ describe('partner registrar', () => {
 
       const name = 'cheta'
 
-      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress, partnerConfigurationContract)
+      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
       const mainTx = await partnerRegistrar.estimateGas('renew', name, BigNumber.from(1), toWei('4'))
       

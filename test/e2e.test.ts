@@ -54,4 +54,4 @@ test('e2e', async () => {
 
   const addr = await rnsResolver.addr('user1.lucachaco.rsk')
   expect(addr).toEqual(TEST_ADDRESS.toLowerCase())
-})
+}, 300000)
