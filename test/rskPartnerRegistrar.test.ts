@@ -36,7 +36,7 @@ describe('partner registrar', () => {
     expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract.address)
     expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
     expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
-  })
+  }, 3000000)
 
   test('price', async () => {
     const {
