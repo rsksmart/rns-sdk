@@ -438,7 +438,7 @@ describe('partner registrar', () => {
       expect(tx).toBeGreaterThan(0)
     })
 
-    test('should estimate gas for commitAndRegister', async () => {
+    test('should estimate gas for commitAndRegister when commitment is required', async () => {
       const {
         partnerRegistrarContract,
         partnerRenewerContract,
@@ -450,6 +450,30 @@ describe('partner registrar', () => {
       } = await deployPartnerRegistrar(
         {
           defaultMinCommitmentAge: 1
+        }
+      )
+      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
+
+      const name = 'cheta'
+
+      const mainTx = await partnerRegistrar.estimateGas('commitAndRegister', name, rnsOwnerAddress, BigNumber.from(1), toWei('4'), rnsOwnerAddress)
+      
+      const tx = mainTx.toNumber();
+      expect(tx).toBeGreaterThan(0)
+    })
+
+    test('should estimate gas for commitAndRegister when commitment is not required', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerRenewerContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwnerAddress,
+        rnsOwner: owner
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge: 0
         }
       )
       const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
