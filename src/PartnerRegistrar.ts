@@ -313,11 +313,20 @@ export class PartnerRegistrar {
         return this.registerOp(label, owner, secret, duration, amount, addr).execute()
       },
       estimateGas: async () => {
+        let estimateCommit: BigNumber = BigNumber.from(0)
+        const partnerManager = await this.getPartnerManagerContract()
+        const partnerConfiguration = await this.getPartnerConfiguration(partnerManager)
+        const minCommitmentAge = await partnerConfiguration.getMinCommitmentAge()
+    
+         // run commitment if commitment is required
+         if (!minCommitmentAge.gt(0)) {
+          secret = generateSecret()
+        } else {
+          estimateCommit = await this.commitOp(label, owner, duration, addr).estimateGas()
+          const commitResult = await this.commit(label, owner, duration, addr)
+          secret = commitResult.secret
+        }
         
-        const estimateCommit = await this.commitOp(label, owner, duration, addr).estimateGas()
-        const commitResult = await this.commit(label, owner, duration, addr)
-
-        secret = commitResult.secret
         const estimateRegister = await this.registerOp(label, owner, secret, duration, amount, addr).estimateGas()
         return estimateCommit.add(estimateRegister)
       }
