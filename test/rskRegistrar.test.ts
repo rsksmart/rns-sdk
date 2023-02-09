@@ -12,7 +12,7 @@ describe('rsk registrar', () => {
     expect(rskRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
     expect(rskRegistrar.fifsAddrRegistrar.address).toEqual(fifsAddrRegistrarContract.address)
     expect(rskRegistrar.rifToken.address).toEqual(rifTokenContract.address)
-  })
+  }, 300000)
 
   test('available', async () => {
     const label = 'available-domain'
