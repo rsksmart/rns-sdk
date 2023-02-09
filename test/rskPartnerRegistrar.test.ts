@@ -381,8 +381,8 @@ describe('partner registrar', () => {
       const name = 'cheta'
 
       const mainTx = await partnerRegistrar.estimateGas('commit', name, rnsOwnerAddress, BigNumber.from(1), rnsOwnerAddress)
-      
-      const tx = mainTx.toNumber();
+
+      const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
     }, 3000000)
 
@@ -407,8 +407,8 @@ describe('partner registrar', () => {
       await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
       const mainTx = await partnerRegistrar.estimateGas('renew', name, BigNumber.from(1), toWei('4'))
-      
-      const tx = mainTx.toNumber();
+
+      const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
     })
 
@@ -433,8 +433,8 @@ describe('partner registrar', () => {
       const secret = generateSecret()
 
       const mainTx = await partnerRegistrar.estimateGas('register', name, rnsOwnerAddress, secret, BigNumber.from(1), toWei('4'), rnsOwnerAddress)
-      
-      const tx = mainTx.toNumber();
+
+      const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
     })
 
@@ -457,8 +457,8 @@ describe('partner registrar', () => {
       const name = 'cheta'
 
       const mainTx = await partnerRegistrar.estimateGas('commitAndRegister', name, rnsOwnerAddress, BigNumber.from(1), toWei('4'), rnsOwnerAddress)
-      
-      const tx = mainTx.toNumber();
+
+      const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
     })
 
@@ -481,8 +481,8 @@ describe('partner registrar', () => {
       const name = 'cheta'
 
       const mainTx = await partnerRegistrar.estimateGas('commitAndRegister', name, rnsOwnerAddress, BigNumber.from(1), toWei('4'), rnsOwnerAddress)
-      
-      const tx = mainTx.toNumber();
+
+      const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
     })
   })
