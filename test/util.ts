@@ -220,7 +220,6 @@ export const DEFAULT_MIN_DURATION = 1
 export const DEFAULT_MAX_DURATION = 2
 export const DEFAULT_MIN_COMMITMENT_AGE = 0
 export const DEFAULT_DISCOUNT = 4
-export const DEFAULT_IS_UNICODE_SUPPORTED = false
 export const DEFAULT_FEE_PERCENTAGE = 5
 export const deployPartnerConfiguration = async ({
   defaultMinCommitmentAge = DEFAULT_MIN_COMMITMENT_AGE,
@@ -246,7 +245,6 @@ export const deployPartnerConfiguration = async ({
     accessControlContract.address,
     DEFAULT_MIN_LENGTH,
     DEFAULT_MAX_LENGTH,
-    DEFAULT_IS_UNICODE_SUPPORTED,
     DEFAULT_MIN_DURATION,
     DEFAULT_MAX_DURATION,
     DEFAULT_FEE_PERCENTAGE,

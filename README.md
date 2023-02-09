@@ -293,10 +293,6 @@ Available operations:
 ```typescript
     const maxLength = await partnerConfiguration.getMaxLength()
 ```
-- getUnicodeSupport
-```typescript
-    const unicodeSupport = await partnerConfiguration.getUnicodeSupport()
-```
 - getMinDuration
 ```typescript
     const minDuration = await partnerConfiguration.getMinDuration()

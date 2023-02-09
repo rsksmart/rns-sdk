@@ -1,8 +1,7 @@
 import { PartnerConfiguration } from '../src'
 import {
   DEFAULT_DISCOUNT,
-  DEFAULT_FEE_PERCENTAGE,
-  DEFAULT_IS_UNICODE_SUPPORTED, DEFAULT_MAX_DURATION,
+  DEFAULT_FEE_PERCENTAGE, DEFAULT_MAX_DURATION,
   DEFAULT_MAX_LENGTH, DEFAULT_MIN_COMMITMENT_AGE, DEFAULT_MIN_DURATION,
   DEFAULT_MIN_LENGTH,
   deployPartnerConfiguration
@@ -33,13 +32,6 @@ describe('partner configuration', () => {
     const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
 
     expect((await partnerConfiguration.getMaxLength()).toNumber()).toEqual(DEFAULT_MAX_LENGTH)
-  })
-
-  test('get unicode support', async () => {
-    const { partnerConfigurationContract, owner } = await deployPartnerConfiguration()
-    const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
-
-    expect(await partnerConfiguration.getUnicodeSupport()).toBe(DEFAULT_IS_UNICODE_SUPPORTED)
   })
 
   test('get min duration', async () => {
@@ -275,31 +267,6 @@ describe('partner configuration', () => {
       const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, provider.getSigner(1))
 
       await expect(partnerConfiguration.setMinDuration(BigNumber.from(DEFAULT_MIN_DURATION + 1))).rejects.toThrow()
-    })
-  })
-
-  describe('set unicode support', () => {
-    it('should set the unicode support', async () => {
-      const {
-        partnerConfigurationContract,
-        owner
-      } = await deployPartnerConfiguration()
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, owner)
-
-      expect((await partnerConfiguration.getUnicodeSupport())).toEqual(DEFAULT_IS_UNICODE_SUPPORTED)
-      await partnerConfiguration.setUnicodeSupport((!DEFAULT_IS_UNICODE_SUPPORTED))
-      expect((await partnerConfiguration.getUnicodeSupport())).toEqual(!DEFAULT_IS_UNICODE_SUPPORTED)
-    })
-
-    it('should throw an error if the signer is not the owner', async () => {
-      const {
-        provider,
-        partnerConfigurationContract
-      } = await deployPartnerConfiguration()
-
-      const partnerConfiguration = new PartnerConfiguration(partnerConfigurationContract.address, provider.getSigner(1))
-
-      await expect(partnerConfiguration.setUnicodeSupport((!DEFAULT_IS_UNICODE_SUPPORTED))).rejects.toThrow()
     })
   })
 })

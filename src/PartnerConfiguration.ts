@@ -3,7 +3,6 @@ import { Signer, Contract, BigNumber } from 'ethers'
 const partnerConfigurationInterface = [
   'function getMinLength() external view returns (uint256)',
   'function getMaxLength() external view returns (uint256)',
-  'function getUnicodeSupport() external view returns (bool)',
   'function getMinDuration() external view returns (uint256)',
   'function getMaxDuration() external view returns (uint256)',
   'function getFeePercentage() external view returns (uint256)',
@@ -14,7 +13,6 @@ const partnerConfigurationInterface = [
   'function setDiscount(uint256 discount) external',
   'function setFeePercentage(uint256 feePercentage) external',
   'function setMaxDuration(uint256 maxDuration) external',
-  'function setUnicodeSupport(bool flag) external',
   'function setMaxLength(uint256 maxLength) external',
   'function setMinDuration(uint256 minDuration) external',
   'function setMinLength(uint256 minLength) external',
@@ -42,13 +40,6 @@ export class PartnerConfiguration {
    */
   getMaxLength (): Promise<BigNumber> {
     return this.partnerConfiguration.getMaxLength()
-  }
-
-  /**
-   * returns support for unicode domains
-   */
-  getUnicodeSupport (): Promise<boolean> {
-    return this.partnerConfiguration.getUnicodeSupport()
   }
 
   /**
@@ -141,15 +132,6 @@ export class PartnerConfiguration {
    */
   async setMaxLength (maxLength: BigNumber): Promise<void> {
     await (await this.partnerConfiguration.connect(this.signer).setMaxLength(maxLength)).wait()
-  }
-
-  /**
-   * sets support for unicode domains
-   *
-   * @param flag true if unicode domains are supported, false otherwise
-   */
-  async setUnicodeSupport (flag: boolean): Promise<void> {
-    await (await this.partnerConfiguration.connect(this.signer).setUnicodeSupport(flag)).wait()
   }
 
   /**
