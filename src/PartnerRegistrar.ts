@@ -1,5 +1,5 @@
 import { BigNumber, constants, Contract, ethers, Signer, utils } from 'ethers'
-import { hashLabel } from './hash'
+import { hashLabel, validateAndNormalizeLabel } from './helpers'
 import { generateSecret } from './random'
 import { PartnerConfiguration } from './PartnerConfiguration'
 
@@ -51,6 +51,10 @@ type AcceptedArgs<T extends AcceptedOperationNames> = T extends 'commit' ? Commi
     T extends 'renew' ? RenewArgs:
       T extends 'commitAndRegister' ? CommitAndRegisterArgs: never;
 
+const REGISTER_SIGNATURE = '0x646c3681'
+
+const RENEW_SIGNATURE = '0x8d7016ca'
+
 export class PartnerRegistrar {
   rskOwner: Contract
   partnerRegistrar: Contract
@@ -78,6 +82,8 @@ export class PartnerRegistrar {
    * @param label the name to register
    */
   available (label: string): Promise<boolean> {
+    label = validateAndNormalizeLabel(label)
+
     return this.rskOwner.available(hashLabel(label))
   }
 
@@ -86,6 +92,8 @@ export class PartnerRegistrar {
    * @param label the name to register
    */
   ownerOf (label: string): Promise<string> {
+    label = validateAndNormalizeLabel(label)
+
     return this.rskOwner.ownerOf(hashLabel(label))
   }
 
@@ -95,10 +103,14 @@ export class PartnerRegistrar {
    * @param duration the duration to register the name
    */
   price (label: string, duration: BigNumber): Promise<BigNumber> {
+    label = validateAndNormalizeLabel(label)
+
     return this.partnerRegistrar.price(label, constants.Zero, duration, this.partnerAddress)
   }
 
   private commitOp (label: string, owner: string, duration: BigNumber, addr?: string): OperationResult<{ secret: string; hash: string }> {
+    label = validateAndNormalizeLabel(label)
+
     const secret = generateSecret()
     const hash = this.makeCommitment(label, owner, secret, duration, addr)
     const params = [hash, this.partnerAddress]
@@ -182,6 +194,8 @@ export class PartnerRegistrar {
    * @param addr the address to set for the name resolution
    */
   private registerOp (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<boolean> {
+    label = validateAndNormalizeLabel(label)
+
     /* Encoding:
       | signature  |  4 bytes      - offset  0
       | owner      | 20 bytes      - offset  4
@@ -192,7 +206,7 @@ export class PartnerRegistrar {
       | name       | variable size - offset 128
   */
 
-    const _signature = '0x646c3681' // sha3("register(string,address,bytes32,uint,address,address)")
+    const _signature = REGISTER_SIGNATURE // sha3("register(string,address,bytes32,uint,address,address)")
     const _owner = owner.slice(2).toLowerCase()
     const _secret = secret.slice(2)
     const _duration = utils.hexZeroPad(duration.toHexString(), 32).slice(2)
@@ -229,6 +243,8 @@ export class PartnerRegistrar {
   }
 
   renewOp (label: string, duration: BigNumber, amount: BigNumber): OperationResult<boolean> {
+    label = validateAndNormalizeLabel(label)
+
     /* Encoding:
       | signature  |  4 bytes      - offset  0
       | duration   | 32 bytes      - offset 4
@@ -236,7 +252,7 @@ export class PartnerRegistrar {
       | name       | variable size - offset 56
   */
 
-    const _signature = '0x8d7016ca' // sha3("renew(string,uint,address)")
+    const _signature = RENEW_SIGNATURE // sha3("renew(string,uint,address)")
     const _duration = utils.hexZeroPad(duration.toHexString(), 32).slice(2)
     const _partner = this.partnerAddress.slice(2).toLowerCase()
     const _name = Buffer.from(utils.toUtf8Bytes(label)).toString('hex')

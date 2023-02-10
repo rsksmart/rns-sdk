@@ -1,4 +1,5 @@
 import { Signer, Contract, BigNumber } from 'ethers'
+import { validateAndNormalizeLabel } from './helpers'
 
 const partnerConfigurationInterface = [
   'function getMinLength() external view returns (uint256)',
@@ -91,11 +92,13 @@ export class PartnerConfiguration {
   /**
    * checks if the name is valid and throws an error if not
    *
-   * @param name the domain name
+   * @param label the domain name
    * @param duration the duration for the registration
    */
-  async validateName (name: string, duration: BigNumber): Promise<void> {
-    await this.partnerConfiguration.validateName(name, duration)
+  async validateName (label: string, duration: BigNumber): Promise<void> {
+    label = validateAndNormalizeLabel(label)
+
+    await this.partnerConfiguration.validateName(label, duration)
   }
 
   /**

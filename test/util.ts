@@ -27,7 +27,7 @@ import AccessControlData from './rskregistrar/accessControl.json'
 import PartnerManagerData from './rskregistrar/partnerManager.json'
 import FeeManagerData from './rskregistrar/feeManager.json'
 
-import { hashDomain, hashLabel, RSKRegistrar } from '../src'
+import { hashDomain, hashLabel, RSKRegistrar, validateAndNormalizeLabel } from '../src'
 import { generateSecret } from '../src/random'
 
 export const sendAndWait = (txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> => txPromise.then(tx => tx.wait())
@@ -188,6 +188,8 @@ export const deployRskRegistrar = async (): Promise<{
 }
 
 export const registerDomain = async (label: string, provider: providers.JsonRpcProvider, rskOwnerContract: Contract, fifsAddrRegistrarContract: Contract, rifTokenContract: Contract, testAccount: Signer): Promise<void> => {
+  label = validateAndNormalizeLabel(label)
+
   const owner = await testAccount.getAddress()
   const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)
   const secret = generateSecret()

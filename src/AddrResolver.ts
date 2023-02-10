@@ -1,5 +1,5 @@
 import { Signer, Contract, ContractTransaction } from 'ethers'
-import { hashDomain } from './hash'
+import { hashDomain } from './helpers'
 
 const rnsRegistryAbi = [
   'function resolver(bytes32 node) public view returns (address)',
