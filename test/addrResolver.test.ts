@@ -1,5 +1,5 @@
 import { AddrResolver } from '../src/AddrResolver'
-import { hashDomain } from '../src/hash'
+import { hashDomain } from '../src/helpers'
 import { deployRNSFactory, sendAndWait } from './util'
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 

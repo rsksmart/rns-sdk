@@ -15,7 +15,7 @@ describe('rsk registrar', () => {
   })
 
   test('available', async () => {
-    const label = 'available_domain'
+    const label = 'available-domain'
     const { provider, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount } = await deployRskRegistrar()
 
     const rskRegistrar = new RSKRegistrar(rskOwnerContract.address, fifsAddrRegistrarContract.address, rifTokenContract.address, testAccount)

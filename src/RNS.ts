@@ -1,5 +1,5 @@
 import { Signer, Contract, ContractTransaction } from 'ethers'
-import { hashDomain, hashLabel } from './hash'
+import { hashDomain, hashLabel, validateAndNormalizeLabel } from './helpers'
 
 const rnsRegistryAbi = [
   'function owner(bytes32 node) public view returns (address)',
@@ -42,6 +42,9 @@ export class RNS {
   // subdomains
   setSubdomainOwner (domain: string, label: string, owner: string): Promise<ContractTransaction> {
     const domainHash = hashDomain(domain)
+
+    label = validateAndNormalizeLabel(label)
+
     const labelHash = hashLabel(label)
 
     return this.rnsRegistry.setSubnodeOwner(domainHash, labelHash, owner)

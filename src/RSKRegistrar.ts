@@ -1,5 +1,5 @@
 import { Signer, Contract, ContractTransaction, BigNumber, utils, constants } from 'ethers'
-import { hashLabel } from './hash'
+import { hashLabel, validateAndNormalizeLabel } from './helpers'
 import { generateSecret } from './random'
 
 const rskOwnerAbi = [
@@ -32,18 +32,26 @@ export class RSKRegistrar {
     }
 
     available (label: string): Promise<string> {
+      label = validateAndNormalizeLabel(label)
+
       return this.rskOwner.available(hashLabel(label))
     }
 
     ownerOf (label: string): Promise<string> {
+      label = validateAndNormalizeLabel(label)
+
       return this.rskOwner.ownerOf(hashLabel(label))
     }
 
     price (label: string, duration: BigNumber): Promise<BigNumber> {
+      label = validateAndNormalizeLabel(label)
+
       return this.fifsAddrRegistrar.price(label, constants.Zero, duration)
     }
 
     async commitToRegister (label: string, owner: string): Promise<{ secret: string, makeCommitmentTransaction: ContractTransaction, canReveal: ()=> Promise<boolean>, hash: string }> {
+      label = validateAndNormalizeLabel(label)
+
       const secret = generateSecret()
       const hash = await this.fifsAddrRegistrar.makeCommitment(hashLabel(label), owner, secret)
       const makeCommitmentTransaction = await this.fifsAddrRegistrar.commit(hash)
@@ -56,6 +64,8 @@ export class RSKRegistrar {
     }
 
     async register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<ContractTransaction> {
+      label = validateAndNormalizeLabel(label)
+
       /* Encoding:
         | signature  |  4 bytes      - offset  0
         | owner      | 20 bytes      - offset  4
