@@ -62,6 +62,18 @@ You will need to use this addresses to initialize the library:
 
 ### .rsk domain registrations
 
+RNS validates and normalizes names in the following way:
+
+1. **Validation:** RNS validates that a name is a valid domain name by checking that it conforms to the following rules:
+
+  - The name contains only letters (a-z), digits (0-9), and hyphens (-).
+  - The name starts and ends with a letter or digit.
+
+2. **Normalization:** RNS normalizes a name by converting it to its canonical form, which includes:
+
+  - Converting all letters to lowercase.
+  - Expanding Punycode-encoded internationalized domain names (IDNs) to their Unicode representation.
+
 #### 1. Using the RSKRegistrar
 You can register .rsk domains paying with RIF Tokens. First, create the instance of `RSKRegistrar`
 
