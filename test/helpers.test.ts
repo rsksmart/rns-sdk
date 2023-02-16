@@ -9,8 +9,13 @@ describe('validateAndNormalizeLabel', function () {
     expect(() => validateAndNormalizeLabel('label.with.dot')).toThrowError('Label cannot contain a dot')
   })
 
+  test('should throw error if label starts with a hyphen', function () {
+    expect(() => validateAndNormalizeLabel('-label')).toThrowError('Failed to validate -label')
+  })
+
   test('should return normalized label', function () {
     expect(validateAndNormalizeLabel('label')).toEqual('label')
+    expect(validateAndNormalizeLabel('xn--c1yn36f')).toEqual('點看')
     expect(validateAndNormalizeLabel('label-with-hyphen')).toEqual('label-with-hyphen')
     expect(() => validateAndNormalizeLabel('label with space')).toThrowError('Illegal char')
     expect(() => validateAndNormalizeLabel('label_with_underscore')).toThrowError('Illegal char _')
