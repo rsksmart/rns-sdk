@@ -155,9 +155,8 @@ const duration = BigNumber.from('1')
 const ownerAddress = '0x...' //address of the owner of the domain
 
 const price = await partnerRegistrar.price(label, duration)
-const partnerConfigurationAddress = '0x...' //address of the partner configuration contract
 
-await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price, partnerConfigurationAddress)
+await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price)
 ```
 
 - Renew the domain
