@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/rns-sdk",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "description": "RNS SDK",
   "main": "dist/bundle.js",
   "types": "dist/index.d.ts",
