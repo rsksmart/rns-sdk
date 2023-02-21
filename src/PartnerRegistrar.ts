@@ -1,11 +1,12 @@
 import { BigNumber, constants, Contract, ethers, Signer, utils } from 'ethers'
-import { hashLabel, validateAndNormalizeLabel } from './helpers'
+import { hashLabel, sendAndWaitForTransaction, validateAndNormalizeLabel } from './helpers'
 import { generateSecret } from './random'
 import { PartnerConfiguration } from './PartnerConfiguration'
 
 const rskOwnerInterface = [
   'function available(uint256 tokenId) public view returns(bool)',
-  'function ownerOf(uint256 tokenId) public view returns (address)'
+  'function ownerOf(uint256 tokenId) public view returns (address)',
+  'function safeTransferFrom(address from, address to, uint256 tokenId) public'
 ]
 
 const partnerRegistrarInterface = [
@@ -46,10 +47,10 @@ type CommitAndRegisterArgs = Parameters<CommitAndRegisterFunction>
 
 type AcceptedOperationNames = 'commit' | 'register' | 'renew' | 'commitAndRegister'
 
-type AcceptedArgs<T extends AcceptedOperationNames> = T extends 'commit' ? CommitArgs:
-  T extends 'register' ? RegisterArgs:
-    T extends 'renew' ? RenewArgs:
-      T extends 'commitAndRegister' ? CommitAndRegisterArgs: never;
+type AcceptedArgs<T extends AcceptedOperationNames> = T extends 'commit' ? CommitArgs :
+  T extends 'register' ? RegisterArgs :
+    T extends 'renew' ? RenewArgs :
+      T extends 'commitAndRegister' ? CommitAndRegisterArgs : never;
 
 const REGISTER_SIGNATURE = '0x646c3681'
 
@@ -75,6 +76,18 @@ export class PartnerRegistrar {
     this.partnerRenewer = new Contract(partnerRenewerAddress, partnerRenewerInterface, signer)
     this.rifToken = new Contract(rifTokenAddress, erc677Interface, signer)
     this.signer = signer
+  }
+
+  /**
+   * Transfers the ownership of an RNS name to another address
+   * @param label the registered name
+   * @param to the address to transfer the name to
+   */
+  async transfer (label: string, to: string): Promise<void> {
+    label = validateAndNormalizeLabel(label)
+
+    const signerAddress = await this.signer.getAddress()
+    await sendAndWaitForTransaction(this.rskOwner.safeTransferFrom(signerAddress, to, hashLabel(label)))
   }
 
   /**
@@ -117,8 +130,7 @@ export class PartnerRegistrar {
 
     return {
       execute: async () => {
-        const makeCommitmentTransaction = await this.partnerRegistrar.commit(...params)
-        await makeCommitmentTransaction.wait()
+        await sendAndWaitForTransaction(this.partnerRegistrar.commit(...params))
 
         return {
           secret,
@@ -154,7 +166,7 @@ export class PartnerRegistrar {
    * @param args the arguments for the operation
    * @returns the estimated gas cost for the operation
    */
-  estimateGas <T extends AcceptedOperationNames> (operationName: T, ...args: AcceptedArgs<T>): Promise<BigNumber> {
+  estimateGas<T extends AcceptedOperationNames> (operationName: T, ...args: AcceptedArgs<T>): Promise<BigNumber> {
     switch (operationName) {
       case 'commit':
         return this.commitOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as string).estimateGas()
@@ -218,8 +230,7 @@ export class PartnerRegistrar {
 
     return {
       execute: async () => {
-        const transaction = await this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data)
-        await transaction.wait()
+        await sendAndWaitForTransaction(this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data))
         return true
       },
       estimateGas: () => {
@@ -261,8 +272,7 @@ export class PartnerRegistrar {
 
     return {
       execute: async () => {
-        const transaction = await this.rifToken.transferAndCall(this.partnerRenewer.address, amount, data)
-        await transaction.wait()
+        await sendAndWaitForTransaction(this.rifToken.transferAndCall(this.partnerRenewer.address, amount, data))
         return true
       },
       estimateGas: () => {

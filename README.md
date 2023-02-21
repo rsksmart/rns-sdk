@@ -159,6 +159,16 @@ const price = await partnerRegistrar.price(label, duration)
 await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price)
 ```
 
+
+- Transfer the domain
+
+```typescript
+const label = 'taringa'
+const toAddress = '0x...' //address to transfer the domain ownership to
+
+await partnerRegistrar.transfer(label, toAddress)
+```
+
 - Renew the domain
 
 ```typescript

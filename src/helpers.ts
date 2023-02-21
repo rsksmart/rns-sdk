@@ -1,5 +1,6 @@
 import { hash as namehash, normalize } from '@ensdomains/eth-ens-namehash'
 import { keccak_256 as sha3 } from 'js-sha3'
+import { ContractTransaction } from 'ethers'
 
 export const hashDomain = (domain: string): string => namehash(domain)
 export const hashLabel = (label: string): string => '0x' + sha3(label)
@@ -19,3 +20,5 @@ export const validateAndNormalizeLabel = (label: string): string => {
 
   return normalizedLabel
 }
+
+export const sendAndWaitForTransaction = async (tx: Promise<ContractTransaction>) => (await tx).wait()
