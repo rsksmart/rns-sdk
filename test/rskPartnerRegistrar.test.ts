@@ -89,6 +89,33 @@ describe('partner registrar', () => {
 
     expect((await partnerRegistrar.ownerOf(name))).toEqual(rnsOwnerAddress)
   }, 3000000)
+  test('transfer', async () => {
+    const {
+      partnerRegistrarContract,
+      partnerRenewerContract,
+      partnerAccountAddress,
+      rskOwnerContract,
+      rifTokenContract,
+      rnsOwnerAddress,
+      rnsOwner: owner,
+      provider
+    } = await deployPartnerRegistrar({
+      defaultMinCommitmentAge: 5
+    })
+    const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
+
+    const name = 'cheta'
+
+    await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
+
+    expect((await partnerRegistrar.ownerOf(name))).toEqual(rnsOwnerAddress)
+
+    const newOwner = provider.getSigner(4)
+
+    await partnerRegistrar.transfer(name, await newOwner.getAddress())
+
+    expect((await partnerRegistrar.ownerOf(name))).toEqual(await newOwner.getAddress())
+  }, 3000000)
 
   describe('commitAndRegister', () => {
     test('should commit and register', async () => {
