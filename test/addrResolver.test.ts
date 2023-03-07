@@ -1,6 +1,5 @@
-import { AddrResolver } from '../src/AddrResolver'
-import { hashDomain } from '../src/helpers'
-import { deployRNSFactory, sendAndWait } from './util'
+import { hashDomain, AddrResolver } from '../src'
+import { deployRNSFactory, rpcUrl, sendAndWait } from './util'
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 
 const deployRNS = deployRNSFactory(TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL)
@@ -24,6 +23,18 @@ describe('addr resolver', () => {
     await sendAndWait(addrResolverContract.setAddr(hashDomain(TEST_TARINGA_SUBDOMAIN), TEST_ADDRESS))
 
     const addrResolver = new AddrResolver(rnsRegistryContract.address, taringaOwner)
+
+    const addressResolved = await addrResolver.addr(TEST_TARINGA_SUBDOMAIN)
+
+    expect(addressResolved).toEqual(TEST_ADDRESS)
+  })
+
+  test('resolve addr for taringa.rsk with node address', async () => {
+    const { rnsRegistryContract, addrResolverContract, registerSubdomain } = await deployRNS()
+    await registerSubdomain()
+    await sendAndWait(addrResolverContract.setAddr(hashDomain(TEST_TARINGA_SUBDOMAIN), TEST_ADDRESS))
+
+    const addrResolver = new AddrResolver(rnsRegistryContract.address, rpcUrl)
 
     const addressResolved = await addrResolver.addr(TEST_TARINGA_SUBDOMAIN)
 

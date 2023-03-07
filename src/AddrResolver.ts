@@ -1,4 +1,4 @@
-import { Signer, Contract, ContractTransaction } from 'ethers'
+import { Contract, ContractTransaction, providers, Signer } from 'ethers'
 import { hashDomain } from './helpers'
 
 const rnsRegistryAbi = [
@@ -13,16 +13,25 @@ const addrResolverAbi = [
 
 export class AddrResolver {
   rnsRegistry: Contract
-  signer: Signer
+  signerOrProvider: Signer | providers.Provider
 
-  constructor (rnsRegistryAddress: string, signer: Signer) {
-    this.rnsRegistry = new Contract(rnsRegistryAddress, rnsRegistryAbi).connect(signer)
-    this.signer = signer
+  constructor (rnsRegistryAddress: string, signerOrNode: Signer | string) {
+    let signerOrProvider: Signer | providers.Provider
+
+    if (typeof signerOrNode === 'string') {
+      signerOrProvider = new providers.JsonRpcProvider(signerOrNode)
+    } else {
+      signerOrProvider = signerOrNode
+    }
+
+    this.rnsRegistry = new Contract(rnsRegistryAddress, rnsRegistryAbi).connect(signerOrProvider)
+
+    this.signerOrProvider = signerOrProvider
   }
 
   private async getAddrResolverContract (domainHash: string): Promise<Contract> {
     const resolverAddress = await this.rnsRegistry.resolver(domainHash)
-    return new Contract(resolverAddress, addrResolverAbi).connect(this.signer)
+    return new Contract(resolverAddress, addrResolverAbi).connect(this.signerOrProvider)
   }
 
   async setAddr (domain: string, addr: string): Promise<ContractTransaction> {
