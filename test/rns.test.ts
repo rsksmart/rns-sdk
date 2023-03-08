@@ -1,5 +1,4 @@
-import { RNS } from '../src/RNS'
-import { hashDomain } from '../src/helpers'
+import { hashDomain, RNS } from '../src'
 import { deployRNSFactory, sendAndWait } from './util'
 import { TEST_TARINGA_LABEL, TEST_SUBDOMAIN_LABEL, TEST_TARINGA_DOMAIN, TEST_TARINGA_SUBDOMAIN, TEST_ADDRESS } from './testCase'
 
@@ -57,5 +56,26 @@ describe('RNS SDK', () => {
     const actualResolver = await rns.getResolver(TEST_TARINGA_DOMAIN)
 
     expect(actualResolver).toEqual(TEST_ADDRESS)
+  })
+
+  test('get subdomain availability', async () => {
+    const { taringaOwner, rnsRegistryContract } = await deployRNS()
+
+    const rns = new RNS(rnsRegistryContract.address, taringaOwner)
+
+    // check that the subdomain is not available when the domain is not registered
+    let isAvailable = await rns.getSubdomainAvailability('random-name.rsk', TEST_SUBDOMAIN_LABEL)
+    expect(isAvailable).toBeFalsy()
+
+    // check that the subdomain is available when the domain is registered
+    isAvailable = await rns.getSubdomainAvailability(TEST_TARINGA_DOMAIN, TEST_SUBDOMAIN_LABEL)
+    expect(isAvailable).toBeTruthy()
+
+    const tx = await rns.setSubdomainOwner(TEST_TARINGA_DOMAIN, TEST_SUBDOMAIN_LABEL, TEST_ADDRESS)
+    await tx.wait()
+
+    // check that the subdomain is not available when the domain is registered and the subdomain is taken
+    isAvailable = await rns.getSubdomainAvailability(TEST_TARINGA_DOMAIN, TEST_SUBDOMAIN_LABEL)
+    expect(isAvailable).toBeFalsy()
   })
 })
