@@ -39,7 +39,7 @@ type CommitFunction = (label: string, owner: string, duration: BigNumber, addr?:
 type RegisterFunction = (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string)=> OperationResult<boolean>
 type RenewFunction = (label: string, duration: BigNumber, amount: BigNumber)=> OperationResult<boolean>
 type CommitAndRegisterFunction = (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string)=> OperationResult<boolean>
-type TransferFunction = (label: string, to: string)=>OperationResult<void>
+type TransferFunction = (label: string, to: string)=> OperationResult<void>
 
 type CommitArgs = Parameters<CommitFunction>
 type RegisterArgs = Parameters<RegisterFunction>
@@ -86,14 +86,14 @@ export class PartnerRegistrar {
    * @param label the registered name
    * @param to the address to transfer the name to
    */
-   transfer (label: string, to: string): Promise<void> {
-    return this.transferOp(label, to).execute();
+  transfer (label: string, to: string): Promise<void> {
+    return this.transferOp(label, to).execute()
   }
 
-  private transferOp(label: string, to: string): OperationResult<void> {
+  private transferOp (label: string, to: string): OperationResult<void> {
     label = validateAndNormalizeLabel(label)
     const signerAddress = this.signer.getAddress()
-    
+
     return {
       execute: async () => {
         await signerAddress
@@ -195,7 +195,7 @@ export class PartnerRegistrar {
 
       case 'commitAndRegister':
         return this.commitAndRegisterOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as BigNumber, args[4] as string).estimateGas()
-      
+
       case 'transfer':
         return this.transferOp(args[0] as string, args[1] as string).estimateGas()
       default:
