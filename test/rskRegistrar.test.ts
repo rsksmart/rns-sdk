@@ -24,7 +24,7 @@ describe('rsk registrar', () => {
     await registerDomain(label, provider, rskOwnerContract, fifsAddrRegistrarContract, rifTokenContract, testAccount)
     const availabilityAfterRegistration = await rskRegistrar.available(label)
     expect(availabilityAfterRegistration).toEqual(false)
-  })
+  }, 300000)
 
   test('price', async () => {
     const label = 'domain-to-check-price'

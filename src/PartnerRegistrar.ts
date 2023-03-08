@@ -39,18 +39,21 @@ type CommitFunction = (label: string, owner: string, duration: BigNumber, addr?:
 type RegisterFunction = (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string)=> OperationResult<boolean>
 type RenewFunction = (label: string, duration: BigNumber, amount: BigNumber)=> OperationResult<boolean>
 type CommitAndRegisterFunction = (label: string, owner: string, duration: BigNumber, amount: BigNumber, partnerConfigurationAddress: string, addr?: string)=> OperationResult<boolean>
+type TransferFunction = (label: string, to: string)=>OperationResult<void>
 
 type CommitArgs = Parameters<CommitFunction>
 type RegisterArgs = Parameters<RegisterFunction>
 type RenewArgs = Parameters<RenewFunction>
 type CommitAndRegisterArgs = Parameters<CommitAndRegisterFunction>
+type TransferArgs = Parameters<TransferFunction>
 
-type AcceptedOperationNames = 'commit' | 'register' | 'renew' | 'commitAndRegister'
+type AcceptedOperationNames = 'commit' | 'register' | 'renew' | 'commitAndRegister' | 'transfer'
 
 type AcceptedArgs<T extends AcceptedOperationNames> = T extends 'commit' ? CommitArgs :
   T extends 'register' ? RegisterArgs :
     T extends 'renew' ? RenewArgs :
-      T extends 'commitAndRegister' ? CommitAndRegisterArgs : never;
+      T extends 'commitAndRegister' ? CommitAndRegisterArgs :
+        T extends 'transfer' ? TransferArgs : never;
 
 const REGISTER_SIGNATURE = '0x646c3681'
 
@@ -83,11 +86,24 @@ export class PartnerRegistrar {
    * @param label the registered name
    * @param to the address to transfer the name to
    */
-  async transfer (label: string, to: string): Promise<void> {
-    label = validateAndNormalizeLabel(label)
+   transfer (label: string, to: string): Promise<void> {
+    return this.transferOp(label, to).execute();
+  }
 
-    const signerAddress = await this.signer.getAddress()
-    await sendAndWaitForTransaction(this.rskOwner.safeTransferFrom(signerAddress, to, hashLabel(label)))
+  private transferOp(label: string, to: string): OperationResult<void> {
+    label = validateAndNormalizeLabel(label)
+    const signerAddress = this.signer.getAddress()
+    
+    return {
+      execute: async () => {
+        await signerAddress
+        await sendAndWaitForTransaction(this.rskOwner.safeTransferFrom(signerAddress, to, hashLabel(label)))
+      },
+      estimateGas: async () => {
+        await signerAddress
+        return this.rskOwner.estimateGas.safeTransferFrom(signerAddress, to, hashLabel(label))
+      }
+    }
   }
 
   /**
@@ -179,6 +195,9 @@ export class PartnerRegistrar {
 
       case 'commitAndRegister':
         return this.commitAndRegisterOp(args[0], args[1] as string, args[2] as BigNumber, args[3] as BigNumber, args[4] as string).estimateGas()
+      
+      case 'transfer':
+        return this.transferOp(args[0] as string, args[1] as string).estimateGas()
       default:
         throw new Error('Invalid operation name')
     }
