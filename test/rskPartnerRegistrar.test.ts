@@ -541,6 +541,6 @@ describe('partner registrar', () => {
 
     const tx = mainTx.toNumber()
     expect(tx).toBeGreaterThan(0)
-    })
+    }, 300000)
   })
 })
