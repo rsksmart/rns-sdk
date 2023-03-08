@@ -1,5 +1,6 @@
 import { Signer, Contract, ContractTransaction } from 'ethers'
 import { hashDomain, hashLabel, validateAndNormalizeLabel } from './helpers'
+import { ZERO_ADDRESS } from '@rsksmart/rns-resolver.js/lib/constants'
 
 const rnsRegistryAbi = [
   'function owner(bytes32 node) public view returns (address)',
@@ -48,5 +49,21 @@ export class RNS {
     const labelHash = hashLabel(label)
 
     return this.rnsRegistry.setSubnodeOwner(domainHash, labelHash, owner)
+  }
+
+  async getSubdomainAvailability (domain: string, label: string): Promise<boolean> {
+    label = validateAndNormalizeLabel(label)
+
+    const domainHash = hashDomain(domain)
+    const domainOwner = await this.rnsRegistry.owner(domainHash)
+
+    if (domainOwner === ZERO_ADDRESS) {
+      return false
+    }
+
+    const subdomainHash = hashDomain(`${label}.${domain}`)
+    const subdomainOwner = await this.rnsRegistry.owner(subdomainHash)
+
+    return subdomainOwner === ZERO_ADDRESS
   }
 }
