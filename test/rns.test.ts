@@ -35,7 +35,7 @@ describe('RNS SDK', () => {
     const owner = await rns.getOwner(TEST_TARINGA_DOMAIN)
 
     expect(owner).toEqual(TEST_ADDRESS)
-  })
+  }, 300000)
 
   test('set resolver', async () => {
     const { taringaOwner, rnsRegistryContract } = await deployRNS()

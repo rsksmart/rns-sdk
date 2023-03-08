@@ -512,5 +512,35 @@ describe('partner registrar', () => {
       const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
     })
+
+    test('should estimate gas for transfer', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerRenewerContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwnerAddress,
+        rnsOwner: owner,
+        provider
+      } = await deployPartnerRegistrar({
+        defaultMinCommitmentAge: 5
+      })
+
+      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
+
+      const name = 'cheta'
+
+      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
+
+      expect((await partnerRegistrar.ownerOf(name))).toEqual(rnsOwnerAddress)
+
+      const newOwner = provider.getSigner(4)
+
+      const mainTx = await partnerRegistrar.estimateGas('transfer', name, await newOwner.getAddress())
+
+      const tx = mainTx.toNumber()
+      expect(tx).toBeGreaterThan(0)
+    }, 300000)
   })
 })
