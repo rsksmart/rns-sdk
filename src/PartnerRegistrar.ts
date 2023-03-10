@@ -6,7 +6,8 @@ import { PartnerConfiguration } from './PartnerConfiguration'
 const rskOwnerInterface = [
   'function available(uint256 tokenId) public view returns(bool)',
   'function ownerOf(uint256 tokenId) public view returns (address)',
-  'function safeTransferFrom(address from, address to, uint256 tokenId) public'
+  'function safeTransferFrom(address from, address to, uint256 tokenId) public',
+  'function reclaim(uint256 tokenId, address newOwner) public'
 ]
 
 const partnerRegistrarInterface = [
@@ -104,6 +105,17 @@ export class PartnerRegistrar {
         return this.rskOwner.estimateGas.safeTransferFrom(signerAddress, to, hashLabel(label))
       }
     }
+  }
+
+  /**
+   * Reclaims ownership of an RNS name on the registry after a transfer
+   * @param label
+   */
+  async reclaim (label: string): Promise<void> {
+    label = validateAndNormalizeLabel(label)
+
+    const signerAddress = await this.signer.getAddress()
+    await sendAndWaitForTransaction(this.rskOwner.reclaim(hashLabel(label), signerAddress))
   }
 
   /**

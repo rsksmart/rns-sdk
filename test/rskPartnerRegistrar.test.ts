@@ -1,4 +1,4 @@
-import { PartnerRegistrar, AddrResolver } from '../src'
+import { PartnerRegistrar, AddrResolver, RNS } from '../src'
 import {
   deployPartnerRegistrar,
   rpcUrl, timeTravel,
@@ -115,6 +115,44 @@ describe('partner registrar', () => {
     await partnerRegistrar.transfer(name, await newOwner.getAddress())
 
     expect((await partnerRegistrar.ownerOf(name))).toEqual(await newOwner.getAddress())
+  }, 3000000)
+  test('reclaim', async () => {
+    const {
+      partnerRegistrarContract,
+      partnerRenewerContract,
+      partnerAccountAddress,
+      rskOwnerContract,
+      rifTokenContract,
+      rnsOwnerAddress,
+      rnsOwner: owner,
+      provider,
+      rnsRegistryContract
+    } = await deployPartnerRegistrar({
+      defaultMinCommitmentAge: 5
+    })
+    let partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
+
+    const rns = new RNS(rnsRegistryContract.address, owner)
+
+    const name = 'cheta'
+
+    await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
+
+    expect((await partnerRegistrar.ownerOf(name))).toEqual(rnsOwnerAddress)
+    expect((await rns.getOwner(name + '.rsk'))).toEqual(rnsOwnerAddress)
+
+    const newOwner = provider.getSigner(4)
+
+    await partnerRegistrar.transfer(name, await newOwner.getAddress())
+
+    expect((await partnerRegistrar.ownerOf(name))).toEqual(await newOwner.getAddress())
+    expect((await rns.getOwner(name + '.rsk'))).toEqual(rnsOwnerAddress)
+
+    partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, newOwner)
+
+    await partnerRegistrar.reclaim(name)
+
+    expect((await rns.getOwner(name + '.rsk'))).toEqual(await newOwner.getAddress())
   }, 3000000)
 
   describe('commitAndRegister', () => {
