@@ -179,7 +179,13 @@ describe('partner registrar', () => {
       const name = 'cheta'
 
       expect((await partnerRegistrar.available(name))).toEqual(true)
-      await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
+      const { commitHash, commitSecret, registerTxHash } = await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
+
+      expect(commitHash).toBeDefined()
+
+      expect(commitSecret).toBeDefined()
+
+      expect(registerTxHash).toBeDefined()
 
       expect((await partnerRegistrar.available(name))).toEqual(false)
     }, 3000000)

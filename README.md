@@ -159,7 +159,7 @@ const ownerAddress = '0x...' //address of the owner of the domain
 
 const price = await partnerRegistrar.price(label, duration)
 
-const transactionHash = await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price)
+const { commitHash, commitSecret, registerTxHash } = await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price)
 ```
 
 

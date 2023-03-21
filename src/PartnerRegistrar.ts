@@ -323,10 +323,11 @@ export class PartnerRegistrar {
    * @param amount the amount for the name registration
    * @param addr the address to set for the name resolution
    */
-  private commitAndRegisterOp (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<string> {
+  private commitAndRegisterOp (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<{commitHash: string, commitSecret: string, registerTxHash: string}> {
     const REVEAL_TIMEOUT_BUFFER = 30 * 1000 // 30 seconds (time to mine a block in RSK)
 
-    let secret: string | undefined
+    let secret: string
+    let hash: string
 
     return {
       execute: async () => {
@@ -342,7 +343,7 @@ export class PartnerRegistrar {
           const commitResult = await this.commit(label, owner, duration, addr)
 
           secret = commitResult.secret
-          const hash = commitResult.hash
+          hash = commitResult.hash
 
           const canReveal = await new Promise((resolve) => {
             setTimeout(async () => {
@@ -354,7 +355,13 @@ export class PartnerRegistrar {
             throw new Error('Cannot register because the commitment cannot be revealed')
           }
         }
-        return this.registerOp(label, owner, secret, duration, amount, addr).execute()
+        const registerTxHash = await this.registerOp(label, owner, secret, duration, amount, addr).execute()
+
+        return {
+          commitHash: hash,
+          commitSecret: secret,
+          registerTxHash: registerTxHash
+        }
       },
       estimateGas: async () => {
         let estimateCommit: BigNumber = BigNumber.from(0)
@@ -395,7 +402,7 @@ export class PartnerRegistrar {
    * @param amount the amount for the name registration
    * @param addr the address to set for the name resolution
    */
-  commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<string> {
+  commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<{commitHash: string, commitSecret: string, registerTxHash: string}> {
     return this.commitAndRegisterOp(label, owner, duration, amount, addr).execute()
   }
 }
