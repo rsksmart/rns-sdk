@@ -31,7 +31,10 @@
   - registrations
 
 - Manage domains:
+  - availability
   - Set subdomain owner
+  - transfer
+  - reclaim
   - Get/set domain owner
   - Get/set domain resolver
 
@@ -42,7 +45,7 @@
 
 The library supports the following modules:
 - .rsk domains registrations using `RSKRegistrar`
-- .rsk domain registrations using the new partner registrar contracts `PartnerRegistrar`
+- .rsk domains registrations using the new partner registrar contracts `PartnerRegistrar`
 - RNS domains admin using `RNS`
 - Domain address resolution using `AddrResolver`
 - Information on a partner configuration using `PartnerConfiguration`
@@ -156,7 +159,7 @@ const ownerAddress = '0x...' //address of the owner of the domain
 
 const price = await partnerRegistrar.price(label, duration)
 
-await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price)
+const transactionHash = await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price)
 ```
 
 
@@ -166,7 +169,7 @@ await partnerRegistrar.commitAndRegister(label, ownerAddress, duration, price)
 const label = 'taringa'
 const toAddress = '0x...' //address to transfer the domain ownership to
 
-await partnerRegistrar.transfer(label, toAddress)
+const transactionHash = await partnerRegistrar.transfer(label, toAddress)
 ```
 
 - Renew the domain
@@ -177,7 +180,7 @@ const duration = BigNumber.from('1')
 
 const price = await partnerRegistrar.price(label, duration)
 
-await partnerRegistrar.renew(label, duration, price)
+const transactionHash = await partnerRegistrar.renew(label, duration, price)
 ```
 
 ### Domain management
@@ -228,6 +231,8 @@ Set the owner of a subdomain of a domain you own
 const domain = 'taringa.rsk'
 const subdomainLabel = 'user1'
 const ownerAddress = '0x8c0f...1264'
+
+const subDomainAvailable = await rns.getSubdomainAvailability(domain, subdomainLabel)
 
 const tx = await rns.setSubdmoainOwner(domain, subdomainLabel, ownerAddress)
 await tx.wait()
