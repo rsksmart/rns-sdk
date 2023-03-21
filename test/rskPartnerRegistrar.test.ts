@@ -112,7 +112,9 @@ describe('partner registrar', () => {
 
     const newOwner = provider.getSigner(4)
 
-    await partnerRegistrar.transfer(name, await newOwner.getAddress())
+    const txhash = await partnerRegistrar.transfer(name, await newOwner.getAddress())
+    
+    expect(txhash).toBeDefined()
 
     expect((await partnerRegistrar.ownerOf(name))).toEqual(await newOwner.getAddress())
   }, 3000000)
@@ -150,7 +152,9 @@ describe('partner registrar', () => {
 
     partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, newOwner)
 
-    await partnerRegistrar.reclaim(name)
+    const txhash = await partnerRegistrar.reclaim(name)
+    
+    expect(txhash).toBeDefined()
 
     expect((await rns.getOwner(name + '.rsk'))).toEqual(await newOwner.getAddress())
   }, 3000000)
@@ -260,7 +264,9 @@ describe('partner registrar', () => {
 
         expect(await partnerRegistrar.canReveal(hash)).toBe(true)
 
-        await partnerRegistrar.register(name, rnsOwnerAddress, secret, duration, amount, rnsOwnerAddress)
+        const txHash = await partnerRegistrar.register(name, rnsOwnerAddress, secret, duration, amount, rnsOwnerAddress)
+
+        expect(txHash).toBeDefined()
 
         expect((await partnerRegistrar.available(name))).toEqual(false)
       }, 3000000)
@@ -422,7 +428,7 @@ describe('partner registrar', () => {
       const name = 'cheta'
       await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
-      expect(await partnerRegistrar.renew(name, BigNumber.from(2), toWei('4'))).toBe(true)
+      expect(await partnerRegistrar.renew(name, BigNumber.from(2), toWei('4'))).toBeDefined()
     }, 3000000)
   })
 
