@@ -264,7 +264,7 @@ export class PartnerRegistrar {
     return {
       execute: async () => {
         const txReciept = await sendAndWaitForTransaction(this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data))
-        
+
         return txReciept.transactionHash
       },
       estimateGas: () => {

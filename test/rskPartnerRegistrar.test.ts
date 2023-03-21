@@ -113,7 +113,7 @@ describe('partner registrar', () => {
     const newOwner = provider.getSigner(4)
 
     const txhash = await partnerRegistrar.transfer(name, await newOwner.getAddress())
-    
+
     expect(txhash).toBeDefined()
 
     expect((await partnerRegistrar.ownerOf(name))).toEqual(await newOwner.getAddress())
@@ -153,7 +153,7 @@ describe('partner registrar', () => {
     partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, newOwner)
 
     const txhash = await partnerRegistrar.reclaim(name)
-    
+
     expect(txhash).toBeDefined()
 
     expect((await rns.getOwner(name + '.rsk'))).toEqual(await newOwner.getAddress())
