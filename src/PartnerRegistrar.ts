@@ -87,18 +87,19 @@ export class PartnerRegistrar {
    * @param label the registered name
    * @param to the address to transfer the name to
    */
-  transfer (label: string, to: string): Promise<void> {
+  transfer (label: string, to: string): Promise<string> {
     return this.transferOp(label, to).execute()
   }
 
-  private transferOp (label: string, to: string): OperationResult<void> {
+  private transferOp (label: string, to: string): OperationResult<string> {
     label = validateAndNormalizeLabel(label)
     const signerAddress = this.signer.getAddress()
 
     return {
       execute: async () => {
         await signerAddress
-        await sendAndWaitForTransaction(this.rskOwner.safeTransferFrom(signerAddress, to, hashLabel(label)))
+        const txReciept = await sendAndWaitForTransaction(this.rskOwner.safeTransferFrom(signerAddress, to, hashLabel(label)))
+        return txReciept.transactionHash
       },
       estimateGas: async () => {
         await signerAddress
@@ -111,11 +112,12 @@ export class PartnerRegistrar {
    * Reclaims ownership of an RNS name on the registry after a transfer
    * @param label
    */
-  async reclaim (label: string): Promise<void> {
+  async reclaim (label: string): Promise<string> {
     label = validateAndNormalizeLabel(label)
 
     const signerAddress = await this.signer.getAddress()
-    await sendAndWaitForTransaction(this.rskOwner.reclaim(hashLabel(label), signerAddress))
+    const txReciept = await sendAndWaitForTransaction(this.rskOwner.reclaim(hashLabel(label), signerAddress))
+    return txReciept.transactionHash
   }
 
   /**
@@ -236,7 +238,7 @@ export class PartnerRegistrar {
    * @param amount the amount for the name registration
    * @param addr the address to set for the name resolution
    */
-  private registerOp (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<boolean> {
+  private registerOp (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<string> {
     label = validateAndNormalizeLabel(label)
 
     /* Encoding:
@@ -261,8 +263,9 @@ export class PartnerRegistrar {
 
     return {
       execute: async () => {
-        await sendAndWaitForTransaction(this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data))
-        return true
+        const txReciept = await sendAndWaitForTransaction(this.rifToken.transferAndCall(this.partnerRegistrar.address, amount, data))
+
+        return txReciept.transactionHash
       },
       estimateGas: () => {
         return this.rifToken.estimateGas.transferAndCall(this.partnerRegistrar.address, amount, data)
@@ -270,7 +273,7 @@ export class PartnerRegistrar {
     }
   }
 
-  register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<boolean> {
+  register (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<string> {
     return this.registerOp(label, owner, secret, duration, amount, addr).execute()
   }
 
@@ -280,11 +283,11 @@ export class PartnerRegistrar {
    * @param duration the duration to renew the name
    * @param amount the amount for the name renewal
    */
-  renew (label: string, duration: BigNumber, amount: BigNumber): Promise<boolean> {
+  renew (label: string, duration: BigNumber, amount: BigNumber): Promise<string> {
     return this.renewOp(label, duration, amount).execute()
   }
 
-  renewOp (label: string, duration: BigNumber, amount: BigNumber): OperationResult<boolean> {
+  renewOp (label: string, duration: BigNumber, amount: BigNumber): OperationResult<string> {
     label = validateAndNormalizeLabel(label)
 
     /* Encoding:
@@ -303,8 +306,8 @@ export class PartnerRegistrar {
 
     return {
       execute: async () => {
-        await sendAndWaitForTransaction(this.rifToken.transferAndCall(this.partnerRenewer.address, amount, data))
-        return true
+        const txReciept = await sendAndWaitForTransaction(this.rifToken.transferAndCall(this.partnerRenewer.address, amount, data))
+        return txReciept.transactionHash
       },
       estimateGas: () => {
         return this.rifToken.estimateGas.transferAndCall(this.partnerRenewer.address, amount, data)
@@ -320,10 +323,11 @@ export class PartnerRegistrar {
    * @param amount the amount for the name registration
    * @param addr the address to set for the name resolution
    */
-  private commitAndRegisterOp (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<boolean> {
+  private commitAndRegisterOp (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): OperationResult<{commitHash: string, commitSecret: string, registerTxHash: string}> {
     const REVEAL_TIMEOUT_BUFFER = 30 * 1000 // 30 seconds (time to mine a block in RSK)
 
-    let secret: string | undefined
+    let secret: string
+    let hash: string
 
     return {
       execute: async () => {
@@ -339,7 +343,7 @@ export class PartnerRegistrar {
           const commitResult = await this.commit(label, owner, duration, addr)
 
           secret = commitResult.secret
-          const hash = commitResult.hash
+          hash = commitResult.hash
 
           const canReveal = await new Promise((resolve) => {
             setTimeout(async () => {
@@ -351,7 +355,13 @@ export class PartnerRegistrar {
             throw new Error('Cannot register because the commitment cannot be revealed')
           }
         }
-        return this.registerOp(label, owner, secret, duration, amount, addr).execute()
+        const registerTxHash = await this.registerOp(label, owner, secret, duration, amount, addr).execute()
+
+        return {
+          commitHash: hash,
+          commitSecret: secret,
+          registerTxHash: registerTxHash
+        }
       },
       estimateGas: async () => {
         let estimateCommit: BigNumber = BigNumber.from(0)
@@ -392,7 +402,7 @@ export class PartnerRegistrar {
    * @param amount the amount for the name registration
    * @param addr the address to set for the name resolution
    */
-  commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<boolean> {
+  commitAndRegister (label: string, owner: string, duration: BigNumber, amount: BigNumber, addr?: string): Promise<{commitHash: string, commitSecret: string, registerTxHash: string}> {
     return this.commitAndRegisterOp(label, owner, duration, amount, addr).execute()
   }
 }
