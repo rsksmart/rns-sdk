@@ -1,7 +1,11 @@
 import { PartnerRegistrar, AddrResolver, RNS } from '../src'
 import {
   deployPartnerRegistrar,
-  rpcUrl, timeTravel,
+  deployRIFContract,
+  deployRNSRegistryAndResolver,
+  rpcUrl,
+  sendAndWait,
+  timeTravel,
   toWei
 } from './util'
 import { BigNumber, Contract, providers, Signer } from 'ethers'
@@ -33,7 +37,7 @@ describe('partner registrar', () => {
     const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
     expect(partnerRegistrar.signer).toEqual(owner)
     expect(partnerRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
-    expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract.address)
+    expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract?.address)
     expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
     expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
   }, 3000000)
@@ -592,5 +596,134 @@ describe('partner registrar', () => {
       const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
     }, 300000)
+  })
+
+  describe('Multiple registrars', () => {
+    test('should allow to different registrar to be resolved by the same resolver and registry', async () => {
+      const minCommitmentAge = 5
+      const {
+        provider,
+        rnsOwner,
+        rnsRegistryContract,
+        addrResolverContract
+      } = await deployRNSRegistryAndResolver()
+
+      const rifTokenContract = await deployRIFContract(rnsOwner)
+
+      const {
+        partnerRegistrarContract: rskPartnerRegistrarContract,
+        partnerRenewerContract: rskPartnerRenewerContract,
+        rskOwnerContract
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge: minCommitmentAge,
+          deployedRifContract: rifTokenContract,
+          deployedRnsRegistryContract: rnsRegistryContract,
+          deployedAddrResolverContract: addrResolverContract
+        }
+      )
+
+      const {
+        partnerRegistrarContract: sovrynPartnerRegistrarContract,
+        partnerRenewerContract: sovrynPartnerRenewerContract,
+        rskOwnerContract: sovrynOwnerContract
+      } = await deployPartnerRegistrar(
+        {
+          defaultMinCommitmentAge: minCommitmentAge,
+          deployedRifContract: rifTokenContract,
+          deployedRnsRegistryContract: rnsRegistryContract,
+          deployedAddrResolverContract: addrResolverContract,
+          label: 'sovryn'
+        }
+      )
+
+      const alice = provider.getSigner(1)
+      const bob = provider.getSigner(2)
+      const partner = provider.getSigner(3)
+      const aliceAddress = await alice.getAddress()
+      const bobAddress = await bob.getAddress()
+      const partnerAddress = await partner.getAddress()
+
+      await sendAndWait(rifTokenContract.transfer(aliceAddress, toWei('10')))
+      await sendAndWait(rifTokenContract.transfer(bobAddress, toWei('10')))
+
+      const duration = BigNumber.from(2)
+      const domainName = 'cheta'
+
+      // Creating sdk Partner Registrar instances
+      const rskPartnerRegistrar = getPartnerRegistrar(
+        partnerAddress,
+        rskPartnerRegistrarContract,
+        rskPartnerRenewerContract,
+        rskOwnerContract,
+        rifTokenContract,
+        alice
+      )
+      const sovrynPartnerRegistrar = getPartnerRegistrar(
+        partnerAddress,
+        sovrynPartnerRegistrarContract,
+        sovrynPartnerRenewerContract,
+        sovrynOwnerContract,
+        rifTokenContract,
+        bob
+      )
+
+      // Calculating the price to register 'cheta.rsk' and 'cheta.sovryn'
+      const rskPrice = await rskPartnerRegistrar.price(domainName, duration)
+      const sovrynPrice = await sovrynPartnerRegistrar.price(domainName, duration)
+
+      // Approving alice and bob the price to register 'cheta.rsk' and 'cheta.sovryn' respectively
+      await (
+        await rifTokenContract.connect(alice).approve(rskPartnerRegistrarContract.address, rskPrice)
+      ).wait()
+      await (
+        await rifTokenContract.connect(bob).approve(rskPartnerRegistrarContract.address, sovrynPrice)
+      ).wait()
+
+      // Commiting and registering 'cheta.rsk'
+      const {
+        secret: rskSecret,
+        hash: rskHash
+      } = await rskPartnerRegistrar.commit(domainName, aliceAddress, duration, aliceAddress)
+      await timeTravel(provider, minCommitmentAge)
+      expect(await rskPartnerRegistrar.canReveal(rskHash)).toBe(true)
+
+      await rskPartnerRegistrar.register(
+        domainName,
+        aliceAddress,
+        rskSecret,
+        duration,
+        rskPrice,
+        aliceAddress
+      )
+
+      // Commiting and registering 'cheta.sovryn'
+      const {
+        secret: sovrynSecret,
+        hash: sovrynHash
+      } = await sovrynPartnerRegistrar.commit(domainName, bobAddress, duration, bobAddress)
+
+      await timeTravel(provider, minCommitmentAge)
+      expect(await sovrynPartnerRegistrar.canReveal(sovrynHash)).toBe(true)
+
+      await sovrynPartnerRegistrar.register(
+        domainName,
+        bobAddress,
+        sovrynSecret,
+        duration,
+        sovrynPrice,
+        bobAddress
+      )
+
+      // Creating sdk Resolver instance
+      const addrResolver = new AddrResolver(rnsRegistryContract.address, rpcUrl)
+
+      // Resolving addresses for 'cheta.rsk' and 'cheta.sovryn'
+      const expectedAliceAddress = await addrResolver.addr(domainName + '.rsk')
+      const expectedBobAddress = await addrResolver.addr(domainName + '.sovryn')
+
+      expect(expectedAliceAddress).toEqual(aliceAddress)
+      expect(expectedBobAddress).toEqual(bobAddress)
+    }, 3000000)
   })
 })
