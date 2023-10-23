@@ -604,15 +604,16 @@ describe('partner registrar', () => {
         partnerAccountAddress,
         rskOwnerContract,
         rifTokenContract,
-        rnsOwner: owner,
+        rnsOwner: owner
       } = await deployPartnerRegistrar({
         defaultMinCommitmentAge: 5
       })
 
       const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
-      
       expect(() => {
-        // @ts-ignore
+        // @ts-expect-error: the argument 'invalidOperation' is not a valid accepted operation name, however
+        // the function needs to be tested that it correctly throws an error when it is invoked with an
+        // invalid operation name.
         partnerRegistrar.estimateGas('invalidOperation')
       }).toThrow('Invalid operation name')
     }, 30000)
@@ -747,5 +748,3 @@ describe('partner registrar', () => {
     }, 300000)
   })
 })
-
-
