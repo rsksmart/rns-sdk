@@ -27,7 +27,7 @@ describe('addr resolver', () => {
     const addressResolved = await addrResolver.addr(TEST_TARINGA_SUBDOMAIN)
 
     expect(addressResolved).toEqual(TEST_ADDRESS)
-  })
+  }, 3000)
 
   test('resolve addr for taringa.rsk with node address', async () => {
     const { rnsRegistryContract, addrResolverContract, registerSubdomain } = await deployRNS()
@@ -39,5 +39,5 @@ describe('addr resolver', () => {
     const addressResolved = await addrResolver.addr(TEST_TARINGA_SUBDOMAIN)
 
     expect(addressResolved).toEqual(TEST_ADDRESS)
-  })
+  }, 3000)
 })

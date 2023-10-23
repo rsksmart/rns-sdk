@@ -40,7 +40,7 @@ describe('partner registrar', () => {
     expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract?.address)
     expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
     expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
-  }, 3000000)
+  }, 300000)
 
   test('price', async () => {
     const {
@@ -56,7 +56,7 @@ describe('partner registrar', () => {
     const duration = BigNumber.from(2)
     const name = 'cheta'
     expect((await partnerRegistrar.price(name, duration)).toString()).toStrictEqual('4000000000000000000')
-  })
+  }, 30000)
 
   test('available', async () => {
     const {
@@ -71,7 +71,7 @@ describe('partner registrar', () => {
 
     const name = 'cheta'
     expect((await partnerRegistrar.available(name))).toBe(true)
-  })
+  }, 30000)
 
   test('ownerOf', async () => {
     const {
@@ -92,7 +92,7 @@ describe('partner registrar', () => {
     await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
     expect((await partnerRegistrar.ownerOf(name))).toEqual(rnsOwnerAddress)
-  }, 3000000)
+  }, 300000)
   test('transfer', async () => {
     const {
       partnerRegistrarContract,
@@ -121,7 +121,7 @@ describe('partner registrar', () => {
     expect(txhash).toBeDefined()
 
     expect((await partnerRegistrar.ownerOf(name))).toEqual(await newOwner.getAddress())
-  }, 3000000)
+  }, 300000)
   test('reclaim', async () => {
     const {
       partnerRegistrarContract,
@@ -161,7 +161,7 @@ describe('partner registrar', () => {
     expect(txhash).toBeDefined()
 
     expect((await rns.getOwner(name + '.rsk'))).toEqual(await newOwner.getAddress())
-  }, 3000000)
+  }, 300000)
 
   describe('commitAndRegister', () => {
     test('should commit and register', async () => {
@@ -192,7 +192,7 @@ describe('partner registrar', () => {
       expect(registerTxHash).toBeDefined()
 
       expect((await partnerRegistrar.available(name))).toEqual(false)
-    }, 3000000)
+    }, 300000)
 
     test('should commit and register when min commitment age is not greater than 0', async () => {
       const {
@@ -212,7 +212,7 @@ describe('partner registrar', () => {
       await commitAndRegister(partnerRegistrar, name, rnsOwnerAddress)
 
       expect((await partnerRegistrar.available(name))).toEqual(false)
-    }, 3000000)
+    }, 300000)
 
     test('should throw a cannot reveal error when time not moved', async () => {
       const {
@@ -348,7 +348,7 @@ describe('partner registrar', () => {
       await timeTravel(provider, defaultMinCommitmentAge)
 
       expect(await partnerRegistrar.canReveal(hash)).toBe(true)
-    }, 3000000)
+    }, 300000)
 
     describe('commit', () => {
       test('should commit successfully', async () => {
@@ -465,7 +465,7 @@ describe('partner registrar', () => {
 
       const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
-    }, 3000000)
+    }, 300000)
 
     test('should estimate gas for renew', async () => {
       const {
@@ -596,6 +596,26 @@ describe('partner registrar', () => {
       const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
     }, 300000)
+
+    test(' Should throw an error when an invalid operation name is called on estimate gas', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerRenewerContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwner: owner,
+      } = await deployPartnerRegistrar({
+        defaultMinCommitmentAge: 5
+      })
+
+      const partnerRegistrar = getPartnerRegistrar(partnerAccountAddress, partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner)
+      
+      expect(() => {
+        // @ts-ignore
+        partnerRegistrar.estimateGas('invalidOperation')
+      }).toThrow('Invalid operation name')
+    }, 30000)
   })
 
   describe('Multiple registrars', () => {
@@ -724,6 +744,8 @@ describe('partner registrar', () => {
 
       expect(expectedAliceAddress).toEqual(aliceAddress)
       expect(expectedBobAddress).toEqual(bobAddress)
-    }, 3000000)
+    }, 300000)
   })
 })
+
+
