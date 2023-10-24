@@ -36,7 +36,7 @@ export const rskLabel = 'rsk'
 
 export const rpcUrl = 'http://localhost:8545'
 
-const deployRNSRegistryAndResolver = async () => {
+export const deployRNSRegistryAndResolver = async () => {
   const provider = new providers.JsonRpcProvider(rpcUrl)
 
   const rnsOwner = provider.getSigner(0)
@@ -263,11 +263,59 @@ export const deployPartnerConfiguration = async ({
     accessControlContract
   }
 }
+
+export const deployRIFContract = async (owner: providers.JsonRpcSigner): Promise<Contract> => {
+  const rifTokenFactory = new ContractFactory(ERC677Data.abi, ERC677Data.bytecode, owner)
+  const rifTokenContract = await rifTokenFactory.deploy(
+    owner.getAddress(),
+    toWei('100000'),
+    'Testing RIF',
+    'RIF',
+    BigNumber.from('18')
+  ) as Contract
+  await rifTokenContract.deployTransaction.wait()
+  return rifTokenContract
+}
+export const deployRskOwnerContract = async (
+  owner: providers.JsonRpcSigner,
+  tokenRegistrarContract: Contract,
+  rnsRegistryContract: Contract,
+  label: string
+): Promise<Contract> => {
+  const rskOwnerFactory = new ContractFactory(RSKOwnerData.abi, RSKOwnerData.bytecode, owner)
+  const rskOwnerContract = await rskOwnerFactory.deploy(
+    tokenRegistrarContract.address,
+    rnsRegistryContract.address,
+    hashDomain(label)
+  )
+  await rskOwnerContract.deployTransaction.wait()
+  return rskOwnerContract
+}
+
+export const deployTokenRegistrarContract = async (
+  owner: providers.JsonRpcSigner,
+  rnsRegistryContract: Contract,
+  rifTokenContract: Contract
+): Promise<Contract> => {
+  const tokenRegistrarFactory = new ContractFactory(TokenRegistrarData.abi, TokenRegistrarData.bytecode, owner)
+  const tokenRegistrarContract = await tokenRegistrarFactory.deploy(rnsRegistryContract.address, hashDomain(rskLabel), rifTokenContract.address)
+  await tokenRegistrarContract.deployTransaction.wait()
+  return tokenRegistrarContract
+}
+
 export const deployPartnerRegistrar = async (
   {
-    defaultMinCommitmentAge = DEFAULT_MIN_COMMITMENT_AGE
+    defaultMinCommitmentAge = DEFAULT_MIN_COMMITMENT_AGE,
+    deployedRifContract,
+    deployedRnsRegistryContract,
+    deployedAddrResolverContract,
+    label = rskLabel
   }: {
-    defaultMinCommitmentAge?: number
+    defaultMinCommitmentAge?: number,
+    deployedRifContract?: Contract,
+    deployedRnsRegistryContract?: Contract,
+    deployedAddrResolverContract?: Contract,
+    label?: string
   } = {}
 ): Promise<{
   provider: providers.JsonRpcProvider,
@@ -285,30 +333,35 @@ export const deployPartnerRegistrar = async (
   rnsOwnerAddress: string,
   rnsOwner: providers.JsonRpcSigner,
 }> => {
-  const {
-    provider,
-    rnsOwner,
-    rnsOwnerAddress,
-    rnsRegistryContract,
-    addrResolverContract
-  } = await deployRNSRegistryAndResolver()
+  const provider = new providers.JsonRpcProvider(rpcUrl)
+  const rnsOwner = provider.getSigner(0)
 
-  const rifTokenFactory = new ContractFactory(ERC677Data.abi, ERC677Data.bytecode, rnsOwner)
-  const rifTokenContract = await rifTokenFactory.deploy(
-    rnsOwnerAddress,
-    toWei('1000'),
-    'Testing RIF',
-    'RIF',
-    BigNumber.from('18')
-  )
-  await rifTokenContract.deployTransaction.wait()
+  let rnsRegistryContract: Contract
+  let addrResolverContract: Contract
+  if (!deployedRnsRegistryContract || !deployedAddrResolverContract) {
+    const deployRNSRegistryAndResolverResult = await deployRNSRegistryAndResolver()
+    rnsRegistryContract = deployRNSRegistryAndResolverResult.rnsRegistryContract
+    addrResolverContract = deployRNSRegistryAndResolverResult.addrResolverContract
+  } else {
+    rnsRegistryContract = deployedRnsRegistryContract
+    addrResolverContract = deployedAddrResolverContract
+  }
+
+  const rnsOwnerAddress = await rnsOwner.getAddress()
+
+  let rifTokenContract: Contract
+  if (deployedRifContract === undefined) {
+    rifTokenContract = await deployRIFContract(rnsOwner)
+  } else {
+    rifTokenContract = deployedRifContract
+  }
 
   const tokenRegistrarFactory = new ContractFactory(TokenRegistrarData.abi, TokenRegistrarData.bytecode, rnsOwner)
-  const tokenRegistrarContract = await tokenRegistrarFactory.deploy(rnsRegistryContract.address, hashDomain(rskLabel), rifTokenContract.address)
+  const tokenRegistrarContract = await tokenRegistrarFactory.deploy(rnsRegistryContract?.address, hashDomain(label), rifTokenContract?.address)
   await tokenRegistrarContract.deployTransaction.wait()
 
   const rskOwnerFactory = new ContractFactory(RSKOwnerData.abi, RSKOwnerData.bytecode, rnsOwner)
-  const rskOwnerContract = await rskOwnerFactory.deploy(tokenRegistrarContract.address, rnsRegistryContract.address, hashDomain(rskLabel))
+  const rskOwnerContract = await rskOwnerFactory.deploy(tokenRegistrarContract.address, rnsRegistryContract?.address, hashDomain(label))
   await rskOwnerContract.deployTransaction.wait()
 
   const bytesUtilsFactory = new ContractFactory(BytesUtilsData.abi, BytesUtilsData.bytecode, rnsOwner)
@@ -343,22 +396,22 @@ export const deployPartnerRegistrar = async (
   const partnerRegistrarContract = await partnerRegistrarFactory.deploy(
     accessControlContract.address,
     rskOwnerContract.address,
-    rifTokenContract.address,
+    rifTokenContract?.address,
     partnerManagerContract.address,
-    rnsRegistryContract.address,
-    hashDomain(rskLabel))
+    rnsRegistryContract?.address,
+    hashDomain(label))
   await partnerRegistrarContract.deployTransaction.wait()
 
   const partnerRenewerContract = await partnerRenewerFactory.deploy(
     accessControlContract.address,
     rskOwnerContract.address,
-    rifTokenContract.address,
+    rifTokenContract?.address,
     partnerManagerContract.address)
   await partnerRenewerContract.deployTransaction.wait()
 
   const feeManagerFactory = new ContractFactory(FeeManagerData.abi, FeeManagerData.bytecode, rnsOwner)
   const feeManagerContract = await feeManagerFactory.deploy(
-    rifTokenContract.address,
+    rifTokenContract?.address,
     partnerRegistrarContract.address,
     partnerRenewerContract.address,
     partnerManagerContract.address,
@@ -378,10 +431,10 @@ export const deployPartnerRegistrar = async (
   await sendAndWait(partnerRegistrarContract.setFeeManager(feeManagerContract.address))
   await sendAndWait(partnerRenewerContract.setFeeManager(feeManagerContract.address))
   await sendAndWait(partnerManagerContract.addPartner(partnerAccountAddress, partnerConfigurationContract.address))
-  await sendAndWait(rifTokenContract.transfer(rnsOwnerAddress, toWei('10')))
+  await sendAndWait(rifTokenContract?.transfer(rnsOwnerAddress, toWei('10')))
   await sendAndWait(rskOwnerContract.addRegistrar(partnerRegistrarContract.address))
   await sendAndWait(rskOwnerContract.addRenewer(partnerRenewerContract.address))
-  await sendAndWait(rnsRegistryContract.setSubnodeOwner(constants.HashZero, hashLabel(rskLabel), rskOwnerContract.address))
+  await sendAndWait(rnsRegistryContract?.setSubnodeOwner(constants.HashZero, hashLabel(label), rskOwnerContract.address))
 
   return {
     provider,
