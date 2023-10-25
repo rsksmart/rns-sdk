@@ -20,27 +20,47 @@ function commitAndRegister (partnerRegistrar: PartnerRegistrar, name: string, rn
 }
 
 function getPartnerRegistrar (partnerRegistrarContract: Contract, partnerRenewerContract: Contract, rskOwnerContract: Contract, rifTokenContract: Contract, owner: Signer, partnerAccountAddress?: string): PartnerRegistrar {
-  return new PartnerRegistrar(partnerRegistrarContract.address, partnerRenewerContract.address, rskOwnerContract.address, rifTokenContract.address, owner, partnerAccountAddress)
+  const networkAddresses = {
+    rskOwnerAddress: rskOwnerContract.address,
+    rifTokenAddress: rifTokenContract.address,
+    partnerRegistrarAddress: partnerRegistrarContract.address,
+    partnerRenewerAddress: partnerRenewerContract.address,
+    partnerAddress: partnerAccountAddress
+  }
+  return new PartnerRegistrar(owner, 'localhost', networkAddresses);
 }
 
 describe('partner registrar', () => {
-  test('constructor', async () => {
-    const {
-      partnerRegistrarContract,
-      partnerRenewerContract,
-      partnerAccountAddress,
-      rskOwnerContract,
-      rifTokenContract,
-      rnsOwner: owner
-    } = await deployPartnerRegistrar()
+  
+  describe('constructor', () => {
+    test('should successfully initialize the registrar class', async () => {
+      const {
+        partnerRegistrarContract,
+        partnerRenewerContract,
+        partnerAccountAddress,
+        rskOwnerContract,
+        rifTokenContract,
+        rnsOwner: owner
+      } = await deployPartnerRegistrar()
+  
+      const partnerRegistrar = getPartnerRegistrar(partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner, partnerAccountAddress)
+      expect(partnerRegistrar.signer).toEqual(owner)
+      expect(partnerRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
+      expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract?.address)
+      expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
+      expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
+    }, 300000)
 
-    const partnerRegistrar = getPartnerRegistrar(partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner, partnerAccountAddress)
-    expect(partnerRegistrar.signer).toEqual(owner)
-    expect(partnerRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
-    expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract?.address)
-    expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
-    expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
-  }, 300000)
+    test('Should throw an error when the network is localhost but no network addresses are parsed', async () => {
+      const {
+        rnsOwner: owner
+      } = await deployPartnerRegistrar()
+
+      expect(() => {
+        new PartnerRegistrar(owner, 'localhost')
+      }).toThrow('Network addresses must be provided for localhost network')
+    })
+  })
 
   test('price', async () => {
     const {

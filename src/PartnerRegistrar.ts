@@ -36,6 +36,33 @@ interface OperationResult<T> {
   execute: ()=> Promise<T>
 }
 
+type Network = 'mainnet' | 'testnet' | 'localhost'
+
+interface NetworkAddresses {
+  partnerAddress?: string | null;
+  partnerRegistrarAddress?: string;
+  partnerRenewerAddress?: string;
+  rifTokenAddress?: string;
+  rskOwnerAddress?: string;
+} 
+
+// TODO: Replace placeholder address with the correct addresses
+const mainnetAddresses: NetworkAddresses = {
+  partnerAddress: '',
+  partnerRegistrarAddress: '',
+  partnerRenewerAddress: '',
+  rifTokenAddress: '0x2acc95758f8b5f583470ba265eb685a8f45fc9d5',
+  rskOwnerAddress: ''
+}
+
+const testnetAddresses: NetworkAddresses = {
+  partnerAddress: '',
+  partnerRegistrarAddress: '',
+  partnerRenewerAddress: '',
+  rifTokenAddress: '0x19f64674D8a5b4e652319F5e239EFd3bc969a1FE',
+  rskOwnerAddress: ''
+}
+
 type CommitFunction = (label: string, owner: string, duration: BigNumber, addr?: string)=> OperationResult<{ secret: string; hash: string }>
 type RegisterFunction = (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string)=> OperationResult<boolean>
 type RenewFunction = (label: string, duration: BigNumber, amount: BigNumber)=> OperationResult<boolean>
@@ -68,23 +95,58 @@ export class PartnerRegistrar {
   signer: Signer
   partnerAddress: string
 
-  // TODO: Replace placeholder address with the correct partner address
-  private readonly _defaultPartnerAddress: string = '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc';
+  networkAddresses: NetworkAddresses
+
+  
+
 
   constructor (
-    partnerRegistrarAddress: string,
-    partnerRenewerAddress: string,
-    rskOwnerAddress: string,
-    rifTokenAddress: string,
     signer: Signer,
-    partnerAddress?: string
+    network: Network,
+    networkAddresses?: NetworkAddresses,
   ) {
-    this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, signer)
-    this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, signer)
-    this.partnerRenewer = new Contract(partnerRenewerAddress, partnerRenewerInterface, signer)
-    this.rifToken = new Contract(rifTokenAddress, erc677Interface, signer)
     this.signer = signer
-    this.partnerAddress = partnerAddress ?? this._defaultPartnerAddress
+    this.networkAddresses = networkAddresses ?? this.getDefaultNetworkAddresses(network);
+
+    if (network === 'localhost' && !networkAddresses) {
+      throw new Error('Network addresses must be provided for localhost network')
+    } else if (network !== 'localhost' && networkAddresses) {
+
+      if ( networkAddresses?.rskOwnerAddress ) {
+        this.networkAddresses.rskOwnerAddress = networkAddresses.rskOwnerAddress;
+      }
+      if ( networkAddresses?.partnerRegistrarAddress ) { 
+        this.networkAddresses.partnerRegistrarAddress = networkAddresses.partnerRegistrarAddress;
+      }
+      if (networkAddresses?.partnerRenewerAddress ) {
+        this.networkAddresses.partnerRenewerAddress = networkAddresses.partnerRenewerAddress;
+      }
+      if ( networkAddresses?.rifTokenAddress ) {
+        this.networkAddresses.rifTokenAddress = networkAddresses.rifTokenAddress;
+      }
+      if ( networkAddresses?.partnerAddress ) {
+        this.networkAddresses.partnerAddress = networkAddresses.partnerAddress;
+      }
+
+    }
+
+
+    this.rskOwner = new Contract(this.networkAddresses.rskOwnerAddress as string, rskOwnerInterface, this.signer)
+    this.partnerRegistrar = new Contract(this.networkAddresses.partnerRegistrarAddress as string, partnerRegistrarInterface, this.signer)
+    this.partnerRenewer = new Contract(this.networkAddresses.partnerRenewerAddress as string, partnerRenewerInterface, this.signer)
+    this.rifToken = new Contract(this.networkAddresses.rifTokenAddress as string, erc677Interface, this.signer)
+    this.partnerAddress = this.networkAddresses.partnerAddress as string
+    
+  }
+
+  private getDefaultNetworkAddresses(network: Network) {
+    switch (network) {
+      case 'mainnet':
+        return mainnetAddresses;
+    
+      default:
+        return testnetAddresses;
+    }
   }
 
   /**
@@ -99,6 +161,7 @@ export class PartnerRegistrar {
   private transferOp (label: string, to: string): OperationResult<string> {
     label = validateAndNormalizeLabel(label)
     const signerAddress = this.signer.getAddress()
+  
 
     return {
       execute: async () => {
