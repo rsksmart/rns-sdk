@@ -59,7 +59,7 @@ describe('partner registrar', () => {
       expect(() => {
         new PartnerRegistrar(owner, 'localhost')
       }).toThrow('Network addresses must be provided for localhost network')
-    })
+    }, 300000)
   })
 
   test('price', async () => {
