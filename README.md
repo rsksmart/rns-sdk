@@ -135,8 +135,9 @@ import { Signer } from 'ethers'
 import { PartnerRegistrar } from '@rsksmart/rns-sdk'
 
 let signer: Signer
-const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContractAddress, partnerRenewerContractAddress, rskOwnerContractAddress, rifTokenContractAddress, signer);
+const partnerRegistrar = new PartnerRegistrar( partnerRegistrarContractAddress, partnerRenewerContractAddress, rskOwnerContractAddress, rifTokenContractAddress, signer, partnerAccountAddress);
 ```
+> NB: The partnerAccountAddress is an optional param. If not included, the default value will be used
 
 - Query price and availability
 
