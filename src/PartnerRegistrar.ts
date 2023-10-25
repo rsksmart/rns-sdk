@@ -66,20 +66,25 @@ export class PartnerRegistrar {
   partnerRenewer: Contract
   rifToken: Contract
   signer: Signer
+  partnerAddress: string
+
+  // TODO: Replace placeholder address with the correct partner address
+  private readonly _defaultPartnerAddress: string = '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc';
 
   constructor (
-    private readonly partnerAddress: string,
     partnerRegistrarAddress: string,
     partnerRenewerAddress: string,
     rskOwnerAddress: string,
     rifTokenAddress: string,
-    signer: Signer
+    signer: Signer,
+    partnerAddress?: string
   ) {
     this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, signer)
     this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, signer)
     this.partnerRenewer = new Contract(partnerRenewerAddress, partnerRenewerInterface, signer)
     this.rifToken = new Contract(rifTokenAddress, erc677Interface, signer)
     this.signer = signer
+    this.partnerAddress = partnerAddress ?? this._defaultPartnerAddress
   }
 
   /**
