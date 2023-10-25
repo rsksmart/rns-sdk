@@ -112,21 +112,11 @@ export class PartnerRegistrar {
       throw new Error('Network addresses must be provided for localhost network')
     } else if (network !== 'localhost' && networkAddresses) {
 
-      if ( networkAddresses?.rskOwnerAddress ) {
-        this.networkAddresses.rskOwnerAddress = networkAddresses.rskOwnerAddress;
-      }
-      if ( networkAddresses?.partnerRegistrarAddress ) { 
-        this.networkAddresses.partnerRegistrarAddress = networkAddresses.partnerRegistrarAddress;
-      }
-      if (networkAddresses?.partnerRenewerAddress ) {
-        this.networkAddresses.partnerRenewerAddress = networkAddresses.partnerRenewerAddress;
-      }
-      if ( networkAddresses?.rifTokenAddress ) {
-        this.networkAddresses.rifTokenAddress = networkAddresses.rifTokenAddress;
-      }
-      if ( networkAddresses?.partnerAddress ) {
-        this.networkAddresses.partnerAddress = networkAddresses.partnerAddress;
-      }
+      this.networkAddresses.rskOwnerAddress = networkAddresses?.rskOwnerAddress ? networkAddresses.rskOwnerAddress : this.getDefaultNetworkAddresses(network).rskOwnerAddress
+      this.networkAddresses.partnerRegistrarAddress = networkAddresses?.partnerRegistrarAddress ? networkAddresses.partnerRegistrarAddress : this.getDefaultNetworkAddresses(network).partnerRegistrarAddress
+      this.networkAddresses.partnerRenewerAddress = networkAddresses?.partnerRenewerAddress ? networkAddresses.partnerRenewerAddress : this.getDefaultNetworkAddresses(network).partnerRenewerAddress 
+      this.networkAddresses.rifTokenAddress = networkAddresses?.rifTokenAddress ? networkAddresses.rifTokenAddress : this.getDefaultNetworkAddresses(network).rifTokenAddress
+      this.networkAddresses.partnerAddress = networkAddresses?.partnerAddress ? networkAddresses.partnerAddress : this.getDefaultNetworkAddresses(network).partnerAddress
 
     }
 
