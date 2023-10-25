@@ -44,7 +44,7 @@ interface NetworkAddresses {
   partnerRenewerAddress?: string;
   rifTokenAddress?: string;
   rskOwnerAddress?: string;
-} 
+}
 
 // TODO: Replace placeholder address with the correct addresses
 const mainnetAddresses: NetworkAddresses = {
@@ -94,48 +94,40 @@ export class PartnerRegistrar {
   rifToken: Contract
   signer: Signer
   partnerAddress: string
-
   networkAddresses: NetworkAddresses
-
-  
-
 
   constructor (
     signer: Signer,
     network: Network,
-    networkAddresses?: NetworkAddresses,
+    networkAddresses?: NetworkAddresses
   ) {
     this.signer = signer
-    this.networkAddresses = networkAddresses ?? this.getDefaultNetworkAddresses(network);
+    this.networkAddresses = networkAddresses ?? this.getDefaultNetworkAddresses(network)
 
     if (network === 'localhost' && !networkAddresses) {
       throw new Error('Network addresses must be provided for localhost network')
     } else if (network !== 'localhost' && networkAddresses) {
-
       this.networkAddresses.rskOwnerAddress = networkAddresses?.rskOwnerAddress ? networkAddresses.rskOwnerAddress : this.getDefaultNetworkAddresses(network).rskOwnerAddress
       this.networkAddresses.partnerRegistrarAddress = networkAddresses?.partnerRegistrarAddress ? networkAddresses.partnerRegistrarAddress : this.getDefaultNetworkAddresses(network).partnerRegistrarAddress
-      this.networkAddresses.partnerRenewerAddress = networkAddresses?.partnerRenewerAddress ? networkAddresses.partnerRenewerAddress : this.getDefaultNetworkAddresses(network).partnerRenewerAddress 
+      this.networkAddresses.partnerRenewerAddress = networkAddresses?.partnerRenewerAddress ? networkAddresses.partnerRenewerAddress : this.getDefaultNetworkAddresses(network).partnerRenewerAddress
       this.networkAddresses.rifTokenAddress = networkAddresses?.rifTokenAddress ? networkAddresses.rifTokenAddress : this.getDefaultNetworkAddresses(network).rifTokenAddress
       this.networkAddresses.partnerAddress = networkAddresses?.partnerAddress ? networkAddresses.partnerAddress : this.getDefaultNetworkAddresses(network).partnerAddress
-
     }
-
 
     this.rskOwner = new Contract(this.networkAddresses.rskOwnerAddress as string, rskOwnerInterface, this.signer)
     this.partnerRegistrar = new Contract(this.networkAddresses.partnerRegistrarAddress as string, partnerRegistrarInterface, this.signer)
     this.partnerRenewer = new Contract(this.networkAddresses.partnerRenewerAddress as string, partnerRenewerInterface, this.signer)
     this.rifToken = new Contract(this.networkAddresses.rifTokenAddress as string, erc677Interface, this.signer)
     this.partnerAddress = this.networkAddresses.partnerAddress as string
-    
   }
 
-  private getDefaultNetworkAddresses(network: Network) {
+  private getDefaultNetworkAddresses (network: Network) {
     switch (network) {
       case 'mainnet':
-        return mainnetAddresses;
-    
+        return mainnetAddresses
+
       default:
-        return testnetAddresses;
+        return testnetAddresses
     }
   }
 
@@ -151,7 +143,6 @@ export class PartnerRegistrar {
   private transferOp (label: string, to: string): OperationResult<string> {
     label = validateAndNormalizeLabel(label)
     const signerAddress = this.signer.getAddress()
-  
 
     return {
       execute: async () => {
