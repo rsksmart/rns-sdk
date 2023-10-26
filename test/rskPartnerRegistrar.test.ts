@@ -27,11 +27,10 @@ function getPartnerRegistrar (partnerRegistrarContract: Contract, partnerRenewer
     partnerRenewerAddress: partnerRenewerContract.address,
     partnerAddress: partnerAccountAddress
   }
-  return new PartnerRegistrar(owner, 'localhost', networkAddresses);
+  return new PartnerRegistrar(owner, 'localhost', networkAddresses)
 }
 
 describe('partner registrar', () => {
-  
   describe('constructor', () => {
     test('should successfully initialize the registrar class', async () => {
       const {
@@ -42,14 +41,14 @@ describe('partner registrar', () => {
         rifTokenContract,
         rnsOwner: owner
       } = await deployPartnerRegistrar()
-  
+
       const partnerRegistrar = getPartnerRegistrar(partnerRegistrarContract, partnerRenewerContract, rskOwnerContract, rifTokenContract, owner, partnerAccountAddress)
       expect(partnerRegistrar.signer).toEqual(owner)
       expect(partnerRegistrar.rskOwner.address).toEqual(rskOwnerContract.address)
       expect(partnerRegistrar.rifToken.address).toEqual(rifTokenContract?.address)
       expect(partnerRegistrar.partnerRegistrar.address).toEqual(partnerRegistrarContract.address)
       expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
-    }, 300000)
+    }, 30000)
 
     test('Should throw an error when the network is localhost but no network addresses are parsed', async () => {
       const {
@@ -57,9 +56,104 @@ describe('partner registrar', () => {
       } = await deployPartnerRegistrar()
 
       expect(() => {
+        /* eslint-disable no-new */
         new PartnerRegistrar(owner, 'localhost')
       }).toThrow('Network addresses must be provided for localhost network')
-    }, 300000)
+    }, 30000)
+
+    test('Should throw an error when network is localhost and a partner address is not provided', async () => {
+      const {
+        rnsOwner: owner,
+        partnerRegistrarContract: dummyContract
+      } = await deployPartnerRegistrar()
+
+      const networkAddresses = {
+        partnerRegistrarAddress: dummyContract.address,
+        partnerRenewerAddress: dummyContract.address,
+        rskOwnerAddress: dummyContract.address,
+        rifTokenAddress: dummyContract.address
+      }
+
+      expect(() => {
+        /* eslint-disable no-new */
+        new PartnerRegistrar(owner, 'localhost', networkAddresses)
+      }).toThrow('partnerAddress address must be provided for localhost network & it\'s value cannot be null')
+    }, 30000)
+
+    test('Should throw an error when network is localhost and a partnerRegistrarAddress is not provided', async () => {
+      const {
+        rnsOwner: owner,
+        partnerRegistrarContract: dummyContract
+      } = await deployPartnerRegistrar()
+
+      const networkAddresses = {
+        partnerAddress: dummyContract.address,
+        partnerRenewerAddress: dummyContract.address,
+        rskOwnerAddress: dummyContract.address,
+        rifTokenAddress: dummyContract.address
+      }
+
+      expect(() => {
+        const testRegistrar = new PartnerRegistrar(owner, 'localhost', networkAddresses)
+      }).toThrow('partnerRegistrarAddress address must be provided for localhost network & it\'s value cannot be null')
+    }, 30000)
+
+    test('Should throw an error when network is localhost and a partnerRenewerAddress is not provided', async () => {
+      const {
+        rnsOwner: owner,
+        partnerRegistrarContract: dummyContract
+      } = await deployPartnerRegistrar()
+
+      const networkAddresses = {
+        partnerAddress: dummyContract.address,
+        partnerRegistrarAddress: dummyContract.address,
+        rskOwnerAddress: dummyContract.address,
+        rifTokenAddress: dummyContract.address
+      }
+
+      expect(() => {
+        /* eslint-disable no-new */
+        new PartnerRegistrar(owner, 'localhost', networkAddresses)
+      }).toThrow('partnerRenewerAddress address must be provided for localhost network & it\'s value cannot be null')
+    }, 30000)
+
+    test('Should throw an error when network is localhost and a rifTokenAddress is not provided', async () => {
+      const {
+        rnsOwner: owner,
+        partnerRegistrarContract: dummyContract
+      } = await deployPartnerRegistrar()
+
+      const networkAddresses = {
+        partnerAddress: dummyContract.address,
+        partnerRegistrarAddress: dummyContract.address,
+        partnerRenewerAddress: dummyContract.address,
+        rskOwnerAddress: dummyContract.address
+      }
+
+      expect(() => {
+        /* eslint-disable no-new */
+        new PartnerRegistrar(owner, 'localhost', networkAddresses)
+      }).toThrow('rifTokenAddress address must be provided for localhost network & it\'s value cannot be null')
+    }, 30000)
+
+    test('Should throw an error when network is localhost and a rskOwnerAddress is not provided', async () => {
+      const {
+        rnsOwner: owner,
+        partnerRegistrarContract: dummyContract
+      } = await deployPartnerRegistrar()
+
+      const networkAddresses = {
+        partnerAddress: dummyContract.address,
+        partnerRegistrarAddress: dummyContract.address,
+        partnerRenewerAddress: dummyContract.address,
+        rifTokenAddress: dummyContract.address
+      }
+
+      expect(() => {
+        /* eslint-disable no-new */
+        new PartnerRegistrar(owner, 'localhost', networkAddresses)
+      }).toThrow('rskOwnerAddress address must be provided for localhost network & it\'s value cannot be null')
+    }, 30000)
   })
 
   test('price', async () => {
@@ -511,7 +605,7 @@ describe('partner registrar', () => {
 
       const tx = mainTx.toNumber()
       expect(tx).toBeGreaterThan(0)
-    })
+    }, 300000)
 
     test('should estimate gas for register', async () => {
       const {
@@ -698,7 +792,7 @@ describe('partner registrar', () => {
         rskOwnerContract,
         rifTokenContract,
         alice,
-        partnerAddress,
+        partnerAddress
       )
       const sovrynPartnerRegistrar = getPartnerRegistrar(
         sovrynPartnerRegistrarContract,
@@ -706,7 +800,7 @@ describe('partner registrar', () => {
         sovrynOwnerContract,
         rifTokenContract,
         bob,
-        partnerAddress,
+        partnerAddress
       )
 
       // Calculating the price to register 'cheta.rsk' and 'cheta.sovryn'

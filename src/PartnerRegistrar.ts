@@ -39,7 +39,8 @@ interface OperationResult<T> {
 type Network = 'mainnet' | 'testnet' | 'localhost'
 
 interface NetworkAddresses {
-  partnerAddress?: string | null;
+  // [key: string]: string | undefined;
+  partnerAddress?: string;
   partnerRegistrarAddress?: string;
   partnerRenewerAddress?: string;
   rifTokenAddress?: string;
@@ -106,6 +107,23 @@ export class PartnerRegistrar {
 
     if (network === 'localhost' && !networkAddresses) {
       throw new Error('Network addresses must be provided for localhost network')
+    } else if (network === 'localhost' && networkAddresses) {
+      // validates to make sure all the keys are present and their values are not null
+      if (!('partnerAddress' in networkAddresses || networkAddresses.partnerAddress === null)) {
+        throw new Error('partnerAddress address must be provided for localhost network & it\'s value cannot be null')
+      }
+      if (!('partnerRegistrarAddress' in networkAddresses || networkAddresses.partnerRegistrarAddress === null)) {
+        throw new Error('partnerRegistrarAddress address must be provided for localhost network & it\'s value cannot be null')
+      }
+      if (!('partnerRenewerAddress' in networkAddresses || networkAddresses.partnerRenewerAddress === null)) {
+        throw new Error('partnerRenewerAddress address must be provided for localhost network & it\'s value cannot be null')
+      }
+      if (!('rifTokenAddress' in networkAddresses || networkAddresses.rifTokenAddress === null)) {
+        throw new Error('rifTokenAddress address must be provided for localhost network & it\'s value cannot be null')
+      }
+      if (!('rskOwnerAddress' in networkAddresses || networkAddresses.rskOwnerAddress === null)) {
+        throw new Error('rskOwnerAddress address must be provided for localhost network & it\'s value cannot be null')
+      }
     } else if (network !== 'localhost' && networkAddresses) {
       this.networkAddresses.rskOwnerAddress = networkAddresses?.rskOwnerAddress ? networkAddresses.rskOwnerAddress : this.getDefaultNetworkAddresses(network).rskOwnerAddress
       this.networkAddresses.partnerRegistrarAddress = networkAddresses?.partnerRegistrarAddress ? networkAddresses.partnerRegistrarAddress : this.getDefaultNetworkAddresses(network).partnerRegistrarAddress
