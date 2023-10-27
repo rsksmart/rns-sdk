@@ -152,7 +152,7 @@ The `network` param is mandatory value, and it only valid values are `'mainnet'`
 
 Param `networkAddresses` is mandatory for `network='localhost'`.
 For `'mainnnet'` and `'testnet'` will be optional and can be passed only in case of needing to modify one of the default
-addresses for the given network.
+addresses for the given network, otherwise, default addresses will be used.
 
 - Query price and availability
 
