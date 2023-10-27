@@ -50,7 +50,7 @@ describe('partner registrar', () => {
       expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
     }, 30000)
 
-    test('Should throw an error when the network is localhost but no network addresses are parsed', async () => {
+    test('Should throw an error when the network is localhost but no network addresses are passed', async () => {
       const {
         rnsOwner: owner
       } = await deployPartnerRegistrar()
