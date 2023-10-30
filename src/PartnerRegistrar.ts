@@ -59,11 +59,11 @@ export const mainnetAddresses: NetworkAddresses = {
 }
 
 export const testnetAddresses: NetworkAddresses = {
-  partnerAddress: '',
-  partnerRegistrarAddress: '',
-  partnerRenewerAddress: '',
-  rifTokenAddress: '0x19f64674D8a5b4e652319F5e239EFd3bc969a1FE',
-  rskOwnerAddress: ''
+  partnerAddress: '0xcd32d5b7c2e1790029d3106d9f8347f42a3dfd60',
+  partnerRegistrarAddress: '0x191c582229e574f59bfa30002ed43f7f9145a9b2',
+  partnerRenewerAddress: '0x5ac6eb1be30710255b45fbdca696fa956ef12116',
+  rifTokenAddress: '0x19f64674d8a5b4e652319f5e239efd3bc969a1fe',
+  rskOwnerAddress: '0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71'
 }
 
 type CommitFunction = (label: string, owner: string, duration: BigNumber, addr?: string)=> OperationResult<{ secret: string; hash: string }>
