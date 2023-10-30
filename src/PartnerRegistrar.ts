@@ -39,7 +39,7 @@ interface OperationResult<T> {
 type Network = 'mainnet' | 'testnet' | 'localhost'
 
 interface NetworkAddresses {
-  // [key: string]: string | undefined;
+  [key: string]: string | undefined;
   partnerAddress?: string;
   partnerRegistrarAddress?: string;
   partnerRenewerAddress?: string;
@@ -47,8 +47,10 @@ interface NetworkAddresses {
   rskOwnerAddress?: string;
 }
 
+const networkAddressesKeys = ['partnerAddress', 'partnerRegistrarAddress', 'partnerRenewerAddress', 'rifTokenAddress', 'rskOwnerAddress']
+
 // TODO: Replace placeholder address with the correct addresses
-const mainnetAddresses: NetworkAddresses = {
+export const mainnetAddresses: NetworkAddresses = {
   partnerAddress: '',
   partnerRegistrarAddress: '',
   partnerRenewerAddress: '',
@@ -56,7 +58,7 @@ const mainnetAddresses: NetworkAddresses = {
   rskOwnerAddress: ''
 }
 
-const testnetAddresses: NetworkAddresses = {
+export const testnetAddresses: NetworkAddresses = {
   partnerAddress: '',
   partnerRegistrarAddress: '',
   partnerRenewerAddress: '',
@@ -109,27 +111,9 @@ export class PartnerRegistrar {
       throw new Error('Network addresses must be provided for localhost network')
     } else if (network === 'localhost' && networkAddresses) {
       // validates to make sure all the keys are present and their values are not null
-      if (!('partnerAddress' in networkAddresses || networkAddresses.partnerAddress === null)) {
-        throw new Error('partnerAddress address must be provided for localhost network & it\'s value cannot be null')
-      }
-      if (!('partnerRegistrarAddress' in networkAddresses || networkAddresses.partnerRegistrarAddress === null)) {
-        throw new Error('partnerRegistrarAddress address must be provided for localhost network & it\'s value cannot be null')
-      }
-      if (!('partnerRenewerAddress' in networkAddresses || networkAddresses.partnerRenewerAddress === null)) {
-        throw new Error('partnerRenewerAddress address must be provided for localhost network & it\'s value cannot be null')
-      }
-      if (!('rifTokenAddress' in networkAddresses || networkAddresses.rifTokenAddress === null)) {
-        throw new Error('rifTokenAddress address must be provided for localhost network & it\'s value cannot be null')
-      }
-      if (!('rskOwnerAddress' in networkAddresses || networkAddresses.rskOwnerAddress === null)) {
-        throw new Error('rskOwnerAddress address must be provided for localhost network & it\'s value cannot be null')
-      }
+      this.validateNetworkAddressesLocalhost(networkAddresses)
     } else if (network !== 'localhost' && networkAddresses) {
-      this.networkAddresses.rskOwnerAddress = networkAddresses?.rskOwnerAddress ? networkAddresses.rskOwnerAddress : this.getDefaultNetworkAddresses(network).rskOwnerAddress
-      this.networkAddresses.partnerRegistrarAddress = networkAddresses?.partnerRegistrarAddress ? networkAddresses.partnerRegistrarAddress : this.getDefaultNetworkAddresses(network).partnerRegistrarAddress
-      this.networkAddresses.partnerRenewerAddress = networkAddresses?.partnerRenewerAddress ? networkAddresses.partnerRenewerAddress : this.getDefaultNetworkAddresses(network).partnerRenewerAddress
-      this.networkAddresses.rifTokenAddress = networkAddresses?.rifTokenAddress ? networkAddresses.rifTokenAddress : this.getDefaultNetworkAddresses(network).rifTokenAddress
-      this.networkAddresses.partnerAddress = networkAddresses?.partnerAddress ? networkAddresses.partnerAddress : this.getDefaultNetworkAddresses(network).partnerAddress
+      this.networkAddresses = this.setNetworkAddresses(networkAddresses, network)
     }
 
     this.rskOwner = new Contract(this.networkAddresses.rskOwnerAddress as string, rskOwnerInterface, this.signer)
@@ -137,6 +121,26 @@ export class PartnerRegistrar {
     this.partnerRenewer = new Contract(this.networkAddresses.partnerRenewerAddress as string, partnerRenewerInterface, this.signer)
     this.rifToken = new Contract(this.networkAddresses.rifTokenAddress as string, erc677Interface, this.signer)
     this.partnerAddress = this.networkAddresses.partnerAddress as string
+  }
+
+  private validateNetworkAddressesLocalhost (networkAddresses: NetworkAddresses) {
+    for (const key of networkAddressesKeys) {
+      const value = networkAddresses[key]
+      if (!(key in networkAddresses) || !value || !ethers.utils.isAddress(value)) {
+        throw new Error(key + ' address must be provided for localhost network & it\'s value cannot be null')
+      }
+    }
+  }
+
+  private setNetworkAddresses (networkAddresses: NetworkAddresses, network: Network): NetworkAddresses {
+    const _defaultNetworkAddresses = this.getDefaultNetworkAddresses(network)
+    for (const key of networkAddressesKeys) {
+      const value = networkAddresses[key]
+      if ((key in networkAddresses) && value && ethers.utils.isAddress(value)) {
+        _defaultNetworkAddresses[key] = value
+      }
+    }
+    return _defaultNetworkAddresses
   }
 
   private getDefaultNetworkAddresses (network: Network) {

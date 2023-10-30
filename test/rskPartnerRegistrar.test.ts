@@ -10,6 +10,7 @@ import {
 } from './util'
 import { BigNumber, Contract, providers, Signer } from 'ethers'
 import { generateSecret } from '../src/random'
+import { testnetAddresses } from '../src/PartnerRegistrar'
 
 function commitAndRegister (partnerRegistrar: PartnerRegistrar, name: string, rnsOwnerAddress: string) {
   const commitAndRegistrarPromise = partnerRegistrar.commitAndRegister(name, rnsOwnerAddress, BigNumber.from(2), toWei('4'), rnsOwnerAddress)
@@ -50,110 +51,140 @@ describe('partner registrar', () => {
       expect(partnerRegistrar.partnerRenewer.address).toEqual(partnerRenewerContract.address)
     }, 30000)
 
-    test('Should throw an error when the network is localhost but no network addresses are passed', async () => {
-      const {
-        rnsOwner: owner
-      } = await deployPartnerRegistrar()
+    describe('localhost', () => {
+      test('Should throw an error when the network is localhost but no network addresses are passed', async () => {
+        const {
+          rnsOwner: owner
+        } = await deployPartnerRegistrar()
 
-      expect(() => {
-        /* eslint-disable no-new */
-        new PartnerRegistrar(owner, 'localhost')
-      }).toThrow('Network addresses must be provided for localhost network')
-    }, 30000)
+        expect(() => {
+          /* eslint-disable no-new */
+          new PartnerRegistrar(owner, 'localhost')
+        }).toThrow('Network addresses must be provided for localhost network')
+      }, 30000)
 
-    test('Should throw an error when network is localhost and a partner address is not provided', async () => {
-      const {
-        rnsOwner: owner,
-        partnerRegistrarContract: dummyContract
-      } = await deployPartnerRegistrar()
+      test('Should throw an error when network is localhost and a partner address is not provided', async () => {
+        const {
+          rnsOwner: owner,
+          partnerRegistrarContract: dummyContract
+        } = await deployPartnerRegistrar()
 
-      const networkAddresses = {
-        partnerRegistrarAddress: dummyContract.address,
-        partnerRenewerAddress: dummyContract.address,
-        rskOwnerAddress: dummyContract.address,
-        rifTokenAddress: dummyContract.address
-      }
+        const networkAddresses = {
+          partnerRegistrarAddress: dummyContract.address,
+          partnerRenewerAddress: dummyContract.address,
+          rskOwnerAddress: dummyContract.address,
+          rifTokenAddress: dummyContract.address
+        }
 
-      expect(() => {
-        /* eslint-disable no-new */
-        new PartnerRegistrar(owner, 'localhost', networkAddresses)
-      }).toThrow('partnerAddress address must be provided for localhost network & it\'s value cannot be null')
-    }, 30000)
+        expect(() => {
+          /* eslint-disable no-new */
+          new PartnerRegistrar(owner, 'localhost', networkAddresses)
+        }).toThrow('partnerAddress address must be provided for localhost network & it\'s value cannot be null')
+      }, 30000)
 
-    test('Should throw an error when network is localhost and a partnerRegistrarAddress is not provided', async () => {
-      const {
-        rnsOwner: owner,
-        partnerRegistrarContract: dummyContract
-      } = await deployPartnerRegistrar()
+      test('Should throw an error when network is localhost and a partnerRegistrarAddress is not provided', async () => {
+        const {
+          rnsOwner: owner,
+          partnerRegistrarContract: dummyContract
+        } = await deployPartnerRegistrar()
 
-      const networkAddresses = {
-        partnerAddress: dummyContract.address,
-        partnerRenewerAddress: dummyContract.address,
-        rskOwnerAddress: dummyContract.address,
-        rifTokenAddress: dummyContract.address
-      }
+        const networkAddresses = {
+          partnerAddress: dummyContract.address,
+          partnerRenewerAddress: dummyContract.address,
+          rskOwnerAddress: dummyContract.address,
+          rifTokenAddress: dummyContract.address
+        }
 
-      expect(() => {
-        const testRegistrar = new PartnerRegistrar(owner, 'localhost', networkAddresses)
-      }).toThrow('partnerRegistrarAddress address must be provided for localhost network & it\'s value cannot be null')
-    }, 30000)
+        expect(() => {
+          const testRegistrar = new PartnerRegistrar(owner, 'localhost', networkAddresses)
+        }).toThrow('partnerRegistrarAddress address must be provided for localhost network & it\'s value cannot be null')
+      }, 30000)
 
-    test('Should throw an error when network is localhost and a partnerRenewerAddress is not provided', async () => {
-      const {
-        rnsOwner: owner,
-        partnerRegistrarContract: dummyContract
-      } = await deployPartnerRegistrar()
+      test('Should throw an error when network is localhost and a partnerRenewerAddress is not provided', async () => {
+        const {
+          rnsOwner: owner,
+          partnerRegistrarContract: dummyContract
+        } = await deployPartnerRegistrar()
 
-      const networkAddresses = {
-        partnerAddress: dummyContract.address,
-        partnerRegistrarAddress: dummyContract.address,
-        rskOwnerAddress: dummyContract.address,
-        rifTokenAddress: dummyContract.address
-      }
+        const networkAddresses = {
+          partnerAddress: dummyContract.address,
+          partnerRegistrarAddress: dummyContract.address,
+          rskOwnerAddress: dummyContract.address,
+          rifTokenAddress: dummyContract.address
+        }
 
-      expect(() => {
-        /* eslint-disable no-new */
-        new PartnerRegistrar(owner, 'localhost', networkAddresses)
-      }).toThrow('partnerRenewerAddress address must be provided for localhost network & it\'s value cannot be null')
-    }, 30000)
+        expect(() => {
+          /* eslint-disable no-new */
+          new PartnerRegistrar(owner, 'localhost', networkAddresses)
+        }).toThrow('partnerRenewerAddress address must be provided for localhost network & it\'s value cannot be null')
+      }, 30000)
 
-    test('Should throw an error when network is localhost and a rifTokenAddress is not provided', async () => {
-      const {
-        rnsOwner: owner,
-        partnerRegistrarContract: dummyContract
-      } = await deployPartnerRegistrar()
+      test('Should throw an error when network is localhost and a rifTokenAddress is not provided', async () => {
+        const {
+          rnsOwner: owner,
+          partnerRegistrarContract: dummyContract
+        } = await deployPartnerRegistrar()
 
-      const networkAddresses = {
-        partnerAddress: dummyContract.address,
-        partnerRegistrarAddress: dummyContract.address,
-        partnerRenewerAddress: dummyContract.address,
-        rskOwnerAddress: dummyContract.address
-      }
+        const networkAddresses = {
+          partnerAddress: dummyContract.address,
+          partnerRegistrarAddress: dummyContract.address,
+          partnerRenewerAddress: dummyContract.address,
+          rskOwnerAddress: dummyContract.address
+        }
 
-      expect(() => {
-        /* eslint-disable no-new */
-        new PartnerRegistrar(owner, 'localhost', networkAddresses)
-      }).toThrow('rifTokenAddress address must be provided for localhost network & it\'s value cannot be null')
-    }, 30000)
+        expect(() => {
+          /* eslint-disable no-new */
+          new PartnerRegistrar(owner, 'localhost', networkAddresses)
+        }).toThrow('rifTokenAddress address must be provided for localhost network & it\'s value cannot be null')
+      }, 30000)
 
-    test('Should throw an error when network is localhost and a rskOwnerAddress is not provided', async () => {
-      const {
-        rnsOwner: owner,
-        partnerRegistrarContract: dummyContract
-      } = await deployPartnerRegistrar()
+      test('Should throw an error when network is localhost and a rskOwnerAddress is not provided', async () => {
+        const {
+          rnsOwner: owner,
+          partnerRegistrarContract: dummyContract
+        } = await deployPartnerRegistrar()
 
-      const networkAddresses = {
-        partnerAddress: dummyContract.address,
-        partnerRegistrarAddress: dummyContract.address,
-        partnerRenewerAddress: dummyContract.address,
-        rifTokenAddress: dummyContract.address
-      }
+        const networkAddresses = {
+          partnerAddress: dummyContract.address,
+          partnerRegistrarAddress: dummyContract.address,
+          partnerRenewerAddress: dummyContract.address,
+          rifTokenAddress: dummyContract.address
+        }
 
-      expect(() => {
-        /* eslint-disable no-new */
-        new PartnerRegistrar(owner, 'localhost', networkAddresses)
-      }).toThrow('rskOwnerAddress address must be provided for localhost network & it\'s value cannot be null')
-    }, 30000)
+        expect(() => {
+          /* eslint-disable no-new */
+          new PartnerRegistrar(owner, 'localhost', networkAddresses)
+        }).toThrow('rskOwnerAddress address must be provided for localhost network & it\'s value cannot be null')
+      }, 30000)
+    })
+    describe('testnet', () => {
+      test('Should set default testnet addresses if no network address is provided', async () => {
+        const {
+          rnsOwner: owner
+        } = await deployPartnerRegistrar()
+
+        const partnerRegistrar = new PartnerRegistrar(owner, 'testnet')
+        expect(partnerRegistrar.networkAddresses).toMatchObject(testnetAddresses)
+      }, 30000)
+
+      test('Should set default testnet addresses and override partner registrar address provided', async () => {
+        const {
+          rnsOwner: owner,
+          partnerRegistrarContract: dummyContract
+        } = await deployPartnerRegistrar()
+
+        const networkAddresses = {
+          partnerRegistrarAddress: dummyContract.address
+        }
+
+        const partnerRegistrar = new PartnerRegistrar(owner, 'testnet', networkAddresses)
+        expect(partnerRegistrar.networkAddresses.partnerAddress).toEqual(testnetAddresses.partnerAddress)
+        expect(partnerRegistrar.networkAddresses.partnerRegistrarAddress).toEqual(dummyContract.address)
+        expect(partnerRegistrar.networkAddresses.partnerRenewerAddress).toEqual(testnetAddresses.partnerRenewerAddress)
+        expect(partnerRegistrar.networkAddresses.rifTokenAddress).toEqual(testnetAddresses.rifTokenAddress)
+        expect(partnerRegistrar.networkAddresses.rskOwnerAddress).toEqual(testnetAddresses.rskOwnerAddress)
+      }, 30000)
+    })
   })
 
   test('price', async () => {
