@@ -135,8 +135,24 @@ import { Signer } from 'ethers'
 import { PartnerRegistrar } from '@rsksmart/rns-sdk'
 
 let signer: Signer
-const partnerRegistrar = new PartnerRegistrar(partnerAccountAddress, partnerRegistrarContractAddress, partnerRenewerContractAddress, rskOwnerContractAddress, rifTokenContractAddress, signer);
+
+const networkAddresses = {
+  rskOwnerAddress: '0x0000000000000000000000000000000000000000',
+  rifTokenAddress: '0x0000000000000000000000000000000000000000',
+  partnerRegistrarAddress: '0x0000000000000000000000000000000000000000',
+  partnerRenewerAddress: '0x0000000000000000000000000000000000000000',
+  partnerAddress: '0x0000000000000000000000000000000000000000'
+}
+
+const partnerRegistrar = new PartnerRegistrar(signer, 'localhost', networkAddresses);
 ```
+**Note:**
+
+The `network` param is mandatory value, and it only valid values are `'mainnet'`, `'testnet'` or `'localhost'`.
+
+Param `networkAddresses` is mandatory for `network='localhost'`.
+For `'mainnnet'` and `'testnet'` will be optional and can be passed only in case of needing to modify one of the default
+addresses for the given network, otherwise, default addresses will be used.
 
 - Query price and availability
 

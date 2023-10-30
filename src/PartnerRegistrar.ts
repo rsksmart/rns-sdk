@@ -36,6 +36,36 @@ interface OperationResult<T> {
   execute: ()=> Promise<T>
 }
 
+type Network = 'mainnet' | 'testnet' | 'localhost'
+
+interface NetworkAddresses {
+  [key: string]: string | undefined;
+  partnerAddress?: string;
+  partnerRegistrarAddress?: string;
+  partnerRenewerAddress?: string;
+  rifTokenAddress?: string;
+  rskOwnerAddress?: string;
+}
+
+const networkAddressesKeys = ['partnerAddress', 'partnerRegistrarAddress', 'partnerRenewerAddress', 'rifTokenAddress', 'rskOwnerAddress']
+
+// TODO: Replace placeholder address with the correct addresses
+export const mainnetAddresses: NetworkAddresses = {
+  partnerAddress: '',
+  partnerRegistrarAddress: '',
+  partnerRenewerAddress: '',
+  rifTokenAddress: '0x2acc95758f8b5f583470ba265eb685a8f45fc9d5',
+  rskOwnerAddress: ''
+}
+
+export const testnetAddresses: NetworkAddresses = {
+  partnerAddress: '0xcd32d5b7c2e1790029d3106d9f8347f42a3dfd60',
+  partnerRegistrarAddress: '0x191c582229e574f59bfa30002ed43f7f9145a9b2',
+  partnerRenewerAddress: '0x5ac6eb1be30710255b45fbdca696fa956ef12116',
+  rifTokenAddress: '0x19f64674d8a5b4e652319f5e239efd3bc969a1fe',
+  rskOwnerAddress: '0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71'
+}
+
 type CommitFunction = (label: string, owner: string, duration: BigNumber, addr?: string)=> OperationResult<{ secret: string; hash: string }>
 type RegisterFunction = (label: string, owner: string, secret: string, duration: BigNumber, amount: BigNumber, addr?: string)=> OperationResult<boolean>
 type RenewFunction = (label: string, duration: BigNumber, amount: BigNumber)=> OperationResult<boolean>
@@ -66,20 +96,61 @@ export class PartnerRegistrar {
   partnerRenewer: Contract
   rifToken: Contract
   signer: Signer
+  partnerAddress: string
+  networkAddresses: NetworkAddresses
 
   constructor (
-    private readonly partnerAddress: string,
-    partnerRegistrarAddress: string,
-    partnerRenewerAddress: string,
-    rskOwnerAddress: string,
-    rifTokenAddress: string,
-    signer: Signer
+    signer: Signer,
+    network: Network,
+    networkAddresses?: NetworkAddresses
   ) {
-    this.rskOwner = new Contract(rskOwnerAddress, rskOwnerInterface, signer)
-    this.partnerRegistrar = new Contract(partnerRegistrarAddress, partnerRegistrarInterface, signer)
-    this.partnerRenewer = new Contract(partnerRenewerAddress, partnerRenewerInterface, signer)
-    this.rifToken = new Contract(rifTokenAddress, erc677Interface, signer)
     this.signer = signer
+    this.networkAddresses = networkAddresses ?? this.getDefaultNetworkAddresses(network)
+
+    if (network === 'localhost' && !networkAddresses) {
+      throw new Error('Network addresses must be provided for localhost network')
+    } else if (network === 'localhost' && networkAddresses) {
+      // validates to make sure all the keys are present and their values are not null
+      this.validateNetworkAddressesLocalhost(networkAddresses)
+    } else if (network !== 'localhost' && networkAddresses) {
+      this.networkAddresses = this.setNetworkAddresses(networkAddresses, network)
+    }
+
+    this.rskOwner = new Contract(this.networkAddresses.rskOwnerAddress as string, rskOwnerInterface, this.signer)
+    this.partnerRegistrar = new Contract(this.networkAddresses.partnerRegistrarAddress as string, partnerRegistrarInterface, this.signer)
+    this.partnerRenewer = new Contract(this.networkAddresses.partnerRenewerAddress as string, partnerRenewerInterface, this.signer)
+    this.rifToken = new Contract(this.networkAddresses.rifTokenAddress as string, erc677Interface, this.signer)
+    this.partnerAddress = this.networkAddresses.partnerAddress as string
+  }
+
+  private validateNetworkAddressesLocalhost (networkAddresses: NetworkAddresses) {
+    for (const key of networkAddressesKeys) {
+      const value = networkAddresses[key]
+      if (!(key in networkAddresses) || !value || !ethers.utils.isAddress(value)) {
+        throw new Error(key + ' address must be provided for localhost network & it\'s value cannot be null')
+      }
+    }
+  }
+
+  private setNetworkAddresses (networkAddresses: NetworkAddresses, network: Network): NetworkAddresses {
+    const _defaultNetworkAddresses = this.getDefaultNetworkAddresses(network)
+    for (const key of networkAddressesKeys) {
+      const value = networkAddresses[key]
+      if ((key in networkAddresses) && value && ethers.utils.isAddress(value)) {
+        _defaultNetworkAddresses[key] = value
+      }
+    }
+    return _defaultNetworkAddresses
+  }
+
+  private getDefaultNetworkAddresses (network: Network) {
+    switch (network) {
+      case 'mainnet':
+        return mainnetAddresses
+
+      default:
+        return testnetAddresses
+    }
   }
 
   /**
