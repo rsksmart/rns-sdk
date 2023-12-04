@@ -59,9 +59,9 @@ export const mainnetAddresses: NetworkAddresses = {
 }
 
 export const testnetAddresses: NetworkAddresses = {
-  partnerAddress: '0xcd32d5b7c2e1790029d3106d9f8347f42a3dfd60',
-  partnerRegistrarAddress: '0x191c582229e574f59bfa30002ed43f7f9145a9b2',
-  partnerRenewerAddress: '0x5ac6eb1be30710255b45fbdca696fa956ef12116',
+  partnerAddress: '0xd43c3383dc43725b5a2d3e079cb55c7c6109cc69',
+  partnerRegistrarAddress: '0x1421fddd1c9aed09c4b3625b4daa0e51ad900db9',
+  partnerRenewerAddress: '0x05405d4a18b3d62b99e0cf4c656079a915e04f2f',
   rifTokenAddress: '0x19f64674d8a5b4e652319f5e239efd3bc969a1fe',
   rskOwnerAddress: '0xca0a477e19bac7e0e172ccfd2e3c28a7200bdb71'
 }
